@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuestionRandomizer.Api/QuestionRandomizer.Api.csproj" />
+    <Project Path="src/QuestionRandomizer.Application/QuestionRandomizer.Application.csproj" />
+    <Project Path="src/QuestionRandomizer.Domain/QuestionRandomizer.Domain.csproj" />
+    <Project Path="src/QuestionRandomizer.Infrastructure/QuestionRandomizer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/QuestionRandomizer.E2ETests/QuestionRandomizer.E2ETests.csproj" />
+    <Project Path="tests/QuestionRandomizer.IntegrationTests/QuestionRandomizer.IntegrationTests.csproj" />
+    <Project Path="tests/QuestionRandomizer.UnitTests/QuestionRandomizer.UnitTests.csproj" />
+  </Folder>
+</Solution>

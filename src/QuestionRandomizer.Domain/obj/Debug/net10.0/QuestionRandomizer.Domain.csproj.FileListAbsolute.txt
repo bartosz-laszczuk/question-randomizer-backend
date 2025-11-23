@@ -1,0 +1,12 @@
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\bin\Debug\net10.0\QuestionRandomizer.Domain.deps.json
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\bin\Debug\net10.0\QuestionRandomizer.Domain.dll
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\bin\Debug\net10.0\QuestionRandomizer.Domain.pdb
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.AssemblyInfoInputs.cache
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.AssemblyInfo.cs
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.csproj.CoreCompileInputs.cache
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.sourcelink.json
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.dll
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\refint\QuestionRandomizer.Domain.dll
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\QuestionRandomizer.Domain.pdb
+C:\D\Repositories\question-randomizer-backend\src\QuestionRandomizer.Domain\obj\Debug\net10.0\ref\QuestionRandomizer.Domain.dll
