@@ -1,0 +1,6 @@
+@QuestionRandomizer.Api.MinimalApi_HostAddress = http://localhost:5104
+
+GET {{QuestionRandomizer.Api.MinimalApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -4,14 +4,14 @@
     "C:\\D\\Repositories\\question-randomizer-backend\\tests\\QuestionRandomizer.E2ETests\\QuestionRandomizer.E2ETests.csproj": {}
   },
   "projects": {
-    "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj": {
+    "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj",
-        "projectName": "QuestionRandomizer.Api",
-        "projectPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj",
+        "projectUniqueName": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj",
+        "projectName": "QuestionRandomizer.Api.Controllers",
+        "projectPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj",
         "packagesPath": "C:\\Users\\Ja\\.nuget\\packages\\",
-        "outputPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\obj\\",
+        "outputPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Ja\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -1593,8 +1593,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj": {
-                "projectPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj"
+              "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj": {
+                "projectPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj"
               }
             }
           }

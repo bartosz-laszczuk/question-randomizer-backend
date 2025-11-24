@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QuestionRandomizer.E2ETests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6973ecfa20ce92390c1d4234c650955a830ca09c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d3a760ce6d0c6971f1bf71b7c7ccf1ea7109833c")]
 [assembly: System.Reflection.AssemblyProductAttribute("QuestionRandomizer.E2ETests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QuestionRandomizer.E2ETests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

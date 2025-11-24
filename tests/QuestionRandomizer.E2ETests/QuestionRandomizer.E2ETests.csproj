@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\QuestionRandomizer.Api\QuestionRandomizer.Api.csproj" />
+    <ProjectReference Include="..\..\src\QuestionRandomizer.Api.Controllers\QuestionRandomizer.Api.Controllers.csproj" />
   </ItemGroup>
 
 </Project>

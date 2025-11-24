@@ -41,7 +41,7 @@
           "FluentAssertions": "7.0.0",
           "Microsoft.AspNetCore.Mvc.Testing": "10.0.0",
           "Microsoft.NET.Test.Sdk": "17.14.1",
-          "QuestionRandomizer.Api": "1.0.0",
+          "QuestionRandomizer.Api.Controllers": "1.0.0",
           "Testcontainers": "3.10.0",
           "coverlet.collector": "6.0.4",
           "xunit": "2.9.3",
@@ -1560,7 +1560,7 @@
           "lib/netstandard1.1/xunit.execution.dotnet.dll": {}
         }
       },
-      "QuestionRandomizer.Api/1.0.0": {
+      "QuestionRandomizer.Api.Controllers/1.0.0": {
         "dependencies": {
           "AspNetCore.HealthChecks.Uris": "9.0.0",
           "Hellang.Middleware.ProblemDetails": "6.5.1",
@@ -1574,13 +1574,13 @@
           "Swashbuckle.AspNetCore": "6.8.1"
         },
         "runtime": {
-          "QuestionRandomizer.Api.dll": {
+          "QuestionRandomizer.Api.Controllers.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
         },
         "compile": {
-          "QuestionRandomizer.Api.dll": {}
+          "QuestionRandomizer.Api.Controllers.dll": {}
         }
       },
       "QuestionRandomizer.Application/1.0.0": {
@@ -4272,7 +4272,7 @@
       "path": "xunit.extensibility.execution/2.9.3",
       "hashPath": "xunit.extensibility.execution.2.9.3.nupkg.sha512"
     },
-    "QuestionRandomizer.Api/1.0.0": {
+    "QuestionRandomizer.Api.Controllers/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -2165,7 +2165,7 @@
           "build/net8.0/xunit.runner.visualstudio.props": {}
         }
       },
-      "QuestionRandomizer.Api/1.0.0": {
+      "QuestionRandomizer.Api.Controllers/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
@@ -2181,10 +2181,10 @@
           "Swashbuckle.AspNetCore": "6.8.1"
         },
         "compile": {
-          "bin/placeholder/QuestionRandomizer.Api.dll": {}
+          "bin/placeholder/QuestionRandomizer.Api.Controllers.dll": {}
         },
         "runtime": {
-          "bin/placeholder/QuestionRandomizer.Api.dll": {}
+          "bin/placeholder/QuestionRandomizer.Api.Controllers.dll": {}
         },
         "frameworkReferences": [
           "Microsoft.AspNetCore.App"
@@ -5433,10 +5433,10 @@
         "xunit.runner.visualstudio.nuspec"
       ]
     },
-    "QuestionRandomizer.Api/1.0.0": {
+    "QuestionRandomizer.Api.Controllers/1.0.0": {
       "type": "project",
-      "path": "../../src/QuestionRandomizer.Api/QuestionRandomizer.Api.csproj",
-      "msbuildProject": "../../src/QuestionRandomizer.Api/QuestionRandomizer.Api.csproj"
+      "path": "../../src/QuestionRandomizer.Api.Controllers/QuestionRandomizer.Api.Controllers.csproj",
+      "msbuildProject": "../../src/QuestionRandomizer.Api.Controllers/QuestionRandomizer.Api.Controllers.csproj"
     },
     "QuestionRandomizer.Application/1.0.0": {
       "type": "project",
@@ -5459,7 +5459,7 @@
       "FluentAssertions >= 7.0.0",
       "Microsoft.AspNetCore.Mvc.Testing >= 10.0.0",
       "Microsoft.NET.Test.Sdk >= 17.14.1",
-      "QuestionRandomizer.Api >= 1.0.0",
+      "QuestionRandomizer.Api.Controllers >= 1.0.0",
       "Testcontainers >= 3.10.0",
       "coverlet.collector >= 6.0.4",
       "xunit >= 2.9.3",
@@ -5491,8 +5491,8 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj": {
-              "projectPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api\\QuestionRandomizer.Api.csproj"
+            "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj": {
+              "projectPath": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers\\QuestionRandomizer.Api.Controllers.csproj"
             }
           }
         }
