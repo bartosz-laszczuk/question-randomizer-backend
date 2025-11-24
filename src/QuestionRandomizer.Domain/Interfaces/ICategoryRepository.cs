@@ -33,6 +33,14 @@ public interface ICategoryRepository
     Task<Category> CreateAsync(Category category, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Create multiple categories at once
+    /// </summary>
+    /// <param name="categories">Categories to create</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Created categories with IDs</returns>
+    Task<List<Category>> CreateManyAsync(List<Category> categories, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Update an existing category
     /// </summary>
     /// <param name="category">Category with updated data</param>

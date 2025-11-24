@@ -37,6 +37,11 @@ public static class DependencyInjection
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IRandomizationRepository, RandomizationRepository>();
 
+        // Register nested resource repositories (subcollections)
+        services.AddScoped<ISelectedCategoryRepository, SelectedCategoryRepository>();
+        services.AddScoped<IUsedQuestionRepository, UsedQuestionRepository>();
+        services.AddScoped<IPostponedQuestionRepository, PostponedQuestionRepository>();
+
         // Register services
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

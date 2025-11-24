@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using QuestionRandomizer.Application.Commands.Questions.CreateQuestion;
 using QuestionRandomizer.Application.Commands.Questions.UpdateQuestion;
 using QuestionRandomizer.Application.Commands.Questions.DeleteQuestion;
+using QuestionRandomizer.Application.Commands.Questions.CreateQuestionsBatch;
+using QuestionRandomizer.Application.Commands.Questions.UpdateQuestionsBatch;
+using QuestionRandomizer.Application.Commands.Questions.RemoveCategoryFromQuestions;
+using QuestionRandomizer.Application.Commands.Questions.RemoveQualificationFromQuestions;
 using QuestionRandomizer.Application.Queries.Questions.GetQuestions;
 using QuestionRandomizer.Application.Queries.Questions.GetQuestionById;
 using QuestionRandomizer.Application.DTOs;
@@ -62,6 +66,36 @@ public static class QuestionEndpoints
             .WithDescription("Soft deletes a question by setting IsActive to false")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound);
+
+        // POST /api/questions/batch
+        group.MapPost("batch", CreateQuestionsBatch)
+            .WithName("CreateQuestionsBatch")
+            .WithSummary("Create multiple questions in a batch")
+            .WithDescription("Creates multiple questions for the authenticated user in a single transaction")
+            .Produces<List<QuestionDto>>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        // PUT /api/questions/batch
+        group.MapPut("batch", UpdateQuestionsBatch)
+            .WithName("UpdateQuestionsBatch")
+            .WithSummary("Update multiple questions in a batch")
+            .WithDescription("Updates multiple questions in a single transaction")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        // DELETE /api/questions/category/{categoryId}
+        group.MapDelete("category/{categoryId}", RemoveCategoryFromQuestions)
+            .WithName("RemoveCategoryFromQuestions")
+            .WithSummary("Remove category from all questions that reference it")
+            .WithDescription("Removes the category ID and name from all questions that reference the specified category")
+            .Produces(StatusCodes.Status204NoContent);
+
+        // DELETE /api/questions/qualification/{qualificationId}
+        group.MapDelete("qualification/{qualificationId}", RemoveQualificationFromQuestions)
+            .WithName("RemoveQualificationFromQuestions")
+            .WithSummary("Remove qualification from all questions that reference it")
+            .WithDescription("Removes the qualification ID and name from all questions that reference the specified qualification")
+            .Produces(StatusCodes.Status204NoContent);
     }
 
     /// <summary>
@@ -135,6 +169,56 @@ public static class QuestionEndpoints
         CancellationToken cancellationToken = default)
     {
         var command = new DeleteQuestionCommand { Id = id };
+        await mediator.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    /// <summary>
+    /// Create multiple questions in a batch
+    /// </summary>
+    private static async Task<Created<List<QuestionDto>>> CreateQuestionsBatch(
+        IMediator mediator,
+        CreateQuestionsBatchCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+        return TypedResults.Created("/api/questions", result);
+    }
+
+    /// <summary>
+    /// Update multiple questions in a batch
+    /// </summary>
+    private static async Task<NoContent> UpdateQuestionsBatch(
+        IMediator mediator,
+        UpdateQuestionsBatchCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        await mediator.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    /// <summary>
+    /// Remove category from all questions that reference it
+    /// </summary>
+    private static async Task<NoContent> RemoveCategoryFromQuestions(
+        IMediator mediator,
+        string categoryId,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RemoveCategoryFromQuestionsCommand { CategoryId = categoryId };
+        await mediator.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    /// <summary>
+    /// Remove qualification from all questions that reference it
+    /// </summary>
+    private static async Task<NoContent> RemoveQualificationFromQuestions(
+        IMediator mediator,
+        string qualificationId,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RemoveQualificationFromQuestionsCommand { QualificationId = qualificationId };
         await mediator.Send(command, cancellationToken);
         return TypedResults.NoContent();
     }

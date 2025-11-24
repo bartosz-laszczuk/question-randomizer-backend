@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QuestionRandomizer.IntegrationTests.Controllers")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d3a760ce6d0c6971f1bf71b7c7ccf1ea7109833c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6409ae6322c4cd32c641ad5f7e582fef3b9a4ba2")]
 [assembly: System.Reflection.AssemblyProductAttribute("QuestionRandomizer.IntegrationTests.Controllers")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QuestionRandomizer.IntegrationTests.Controllers")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -41,6 +41,15 @@ public interface IConversationRepository
     Task<bool> UpdateAsync(Conversation conversation, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Update the updatedAt timestamp of a conversation
+    /// </summary>
+    /// <param name="conversationId">Conversation ID</param>
+    /// <param name="userId">User ID (for authorization)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if updated, false if not found or unauthorized</returns>
+    Task<bool> UpdateTimestampAsync(string conversationId, string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Delete a conversation
     /// </summary>
     /// <param name="id">Conversation ID</param>

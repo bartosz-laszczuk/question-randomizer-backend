@@ -108,4 +108,30 @@ public class ConversationRepository : IConversationRepository
         await docRef.DeleteAsync(cancellationToken: cancellationToken);
         return true;
     }
+
+    public async Task<bool> UpdateTimestampAsync(string conversationId, string userId, CancellationToken cancellationToken = default)
+    {
+        var docRef = _firestoreDb.Collection(FirestoreCollections.Conversations).Document(conversationId);
+
+        // Verify document exists and belongs to user
+        var snapshot = await docRef.GetSnapshotAsync(cancellationToken);
+        if (!snapshot.Exists)
+        {
+            return false;
+        }
+
+        var conversation = snapshot.ConvertTo<Conversation>();
+        if (conversation.UserId != userId)
+        {
+            return false;
+        }
+
+        // Update timestamp
+        await docRef.UpdateAsync(new Dictionary<string, object>
+        {
+            { nameof(Conversation.UpdatedAt), FieldValue.ServerTimestamp }
+        }, cancellationToken: cancellationToken);
+
+        return true;
+    }
 }

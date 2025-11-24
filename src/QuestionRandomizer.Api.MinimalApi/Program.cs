@@ -90,6 +90,10 @@ app.UseAuthorization();
 
 // Map endpoints
 app.MapQuestionEndpoints();
+app.MapCategoryEndpoints();
+app.MapQualificationEndpoints();
+app.MapRandomizationEndpoints();
+app.MapConversationEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

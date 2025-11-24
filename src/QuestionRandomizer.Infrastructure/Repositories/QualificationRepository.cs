@@ -65,6 +65,26 @@ public class QualificationRepository : IQualificationRepository
         return qualification;
     }
 
+    public async Task<List<Qualification>> CreateManyAsync(List<Qualification> qualifications, CancellationToken cancellationToken = default)
+    {
+        var batch = _firestoreDb.StartBatch();
+        var collection = _firestoreDb.Collection(FirestoreCollections.Qualifications);
+        var createdQualifications = new List<Qualification>();
+
+        foreach (var qualification in qualifications)
+        {
+            var docRef = collection.Document();
+            batch.Set(docRef, qualification);
+
+            var createdQualification = qualification;
+            createdQualification.Id = docRef.Id;
+            createdQualifications.Add(createdQualification);
+        }
+
+        await batch.CommitAsync(cancellationToken);
+        return createdQualifications;
+    }
+
     public async Task<bool> UpdateAsync(Qualification qualification, CancellationToken cancellationToken = default)
     {
         var docRef = _firestoreDb.Collection(FirestoreCollections.Qualifications).Document(qualification.Id);

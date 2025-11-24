@@ -33,6 +33,14 @@ public interface IQualificationRepository
     Task<Qualification> CreateAsync(Qualification qualification, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Create multiple qualifications at once
+    /// </summary>
+    /// <param name="qualifications">Qualifications to create</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Created qualifications with IDs</returns>
+    Task<List<Qualification>> CreateManyAsync(List<Qualification> qualifications, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Update an existing qualification
     /// </summary>
     /// <param name="qualification">Qualification with updated data</param>

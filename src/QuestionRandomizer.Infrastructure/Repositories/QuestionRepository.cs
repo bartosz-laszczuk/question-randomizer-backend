@@ -130,4 +130,98 @@ public class QuestionRepository : IQuestionRepository
             })
             .ToList();
     }
+
+    public async Task<List<Question>> CreateManyAsync(List<Question> questions, CancellationToken cancellationToken = default)
+    {
+        var batch = _firestoreDb.StartBatch();
+        var collection = _firestoreDb.Collection(FirestoreCollections.Questions);
+        var createdQuestions = new List<Question>();
+
+        foreach (var question in questions)
+        {
+            var docRef = collection.Document();
+            batch.Set(docRef, question);
+
+            var createdQuestion = question;
+            createdQuestion.Id = docRef.Id;
+            createdQuestions.Add(createdQuestion);
+        }
+
+        await batch.CommitAsync(cancellationToken);
+        return createdQuestions;
+    }
+
+    public async Task UpdateManyAsync(List<Question> questions, CancellationToken cancellationToken = default)
+    {
+        var batch = _firestoreDb.StartBatch();
+        var collection = _firestoreDb.Collection(FirestoreCollections.Questions);
+
+        foreach (var question in questions)
+        {
+            var docRef = collection.Document(question.Id);
+            batch.Set(docRef, question, SetOptions.Overwrite);
+        }
+
+        await batch.CommitAsync(cancellationToken);
+    }
+
+    public async Task RemoveCategoryIdAsync(string categoryId, string userId, CancellationToken cancellationToken = default)
+    {
+        // Get all questions with this categoryId for this user
+        var query = _firestoreDb.Collection(FirestoreCollections.Questions)
+            .WhereEqualTo(nameof(Question.UserId), userId)
+            .WhereEqualTo(nameof(Question.CategoryId), categoryId);
+
+        var snapshot = await query.GetSnapshotAsync(cancellationToken);
+
+        if (!snapshot.Documents.Any())
+        {
+            return;
+        }
+
+        // Batch update to remove categoryId and categoryName
+        var batch = _firestoreDb.StartBatch();
+
+        foreach (var doc in snapshot.Documents)
+        {
+            batch.Update(doc.Reference, new Dictionary<string, object>
+            {
+                { nameof(Question.CategoryId), FieldValue.Delete },
+                { nameof(Question.CategoryName), FieldValue.Delete },
+                { nameof(Question.UpdatedAt), FieldValue.ServerTimestamp }
+            });
+        }
+
+        await batch.CommitAsync(cancellationToken);
+    }
+
+    public async Task RemoveQualificationIdAsync(string qualificationId, string userId, CancellationToken cancellationToken = default)
+    {
+        // Get all questions with this qualificationId for this user
+        var query = _firestoreDb.Collection(FirestoreCollections.Questions)
+            .WhereEqualTo(nameof(Question.UserId), userId)
+            .WhereEqualTo(nameof(Question.QualificationId), qualificationId);
+
+        var snapshot = await query.GetSnapshotAsync(cancellationToken);
+
+        if (!snapshot.Documents.Any())
+        {
+            return;
+        }
+
+        // Batch update to remove qualificationId and qualificationName
+        var batch = _firestoreDb.StartBatch();
+
+        foreach (var doc in snapshot.Documents)
+        {
+            batch.Update(doc.Reference, new Dictionary<string, object>
+            {
+                { nameof(Question.QualificationId), FieldValue.Delete },
+                { nameof(Question.QualificationName), FieldValue.Delete },
+                { nameof(Question.UpdatedAt), FieldValue.ServerTimestamp }
+            });
+        }
+
+        await batch.CommitAsync(cancellationToken);
+    }
 }

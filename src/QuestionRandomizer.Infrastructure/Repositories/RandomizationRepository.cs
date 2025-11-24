@@ -128,4 +128,30 @@ public class RandomizationRepository : IRandomizationRepository
         await docRef.DeleteAsync(cancellationToken: cancellationToken);
         return true;
     }
+
+    public async Task<bool> ClearCurrentQuestionAsync(string randomizationId, string userId, CancellationToken cancellationToken = default)
+    {
+        var docRef = _firestoreDb.Collection(FirestoreCollections.Randomizations).Document(randomizationId);
+
+        // Verify document exists and belongs to user
+        var snapshot = await docRef.GetSnapshotAsync(cancellationToken);
+        if (!snapshot.Exists)
+        {
+            return false;
+        }
+
+        var randomization = snapshot.ConvertTo<Randomization>();
+        if (randomization.UserId != userId)
+        {
+            return false;
+        }
+
+        // Clear CurrentQuestionId
+        await docRef.UpdateAsync(new Dictionary<string, object>
+        {
+            { nameof(Randomization.CurrentQuestionId), FieldValue.Delete }
+        }, cancellationToken: cancellationToken);
+
+        return true;
+    }
 }

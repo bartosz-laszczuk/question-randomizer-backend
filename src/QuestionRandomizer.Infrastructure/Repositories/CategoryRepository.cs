@@ -65,6 +65,26 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
+    public async Task<List<Category>> CreateManyAsync(List<Category> categories, CancellationToken cancellationToken = default)
+    {
+        var batch = _firestoreDb.StartBatch();
+        var collection = _firestoreDb.Collection(FirestoreCollections.Categories);
+        var createdCategories = new List<Category>();
+
+        foreach (var category in categories)
+        {
+            var docRef = collection.Document();
+            batch.Set(docRef, category);
+
+            var createdCategory = category;
+            createdCategory.Id = docRef.Id;
+            createdCategories.Add(createdCategory);
+        }
+
+        await batch.CommitAsync(cancellationToken);
+        return createdCategories;
+    }
+
     public async Task<bool> UpdateAsync(Category category, CancellationToken cancellationToken = default)
     {
         var docRef = _firestoreDb.Collection(FirestoreCollections.Categories).Document(category.Id);

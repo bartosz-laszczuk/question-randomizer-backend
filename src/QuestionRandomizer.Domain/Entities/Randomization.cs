@@ -21,6 +21,21 @@ public class Randomization
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Whether to show the answer in the UI
+    /// </summary>
+    public bool ShowAnswer { get; set; }
+
+    /// <summary>
+    /// Status of the session (Ongoing, Completed)
+    /// </summary>
+    public string Status { get; set; } = "Ongoing";
+
+    /// <summary>
+    /// ID of the current question being displayed
+    /// </summary>
+    public string? CurrentQuestionId { get; set; }
+
+    /// <summary>
     /// List of category IDs selected for this session
     /// </summary>
     public List<string>? SelectedCategoryIds { get; set; }

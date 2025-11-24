@@ -56,4 +56,13 @@ public interface IRandomizationRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if deleted, false if not found or unauthorized</returns>
     Task<bool> DeleteAsync(string id, string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Clear the current question from a randomization session
+    /// </summary>
+    /// <param name="randomizationId">Randomization ID</param>
+    /// <param name="userId">User ID (for authorization)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if cleared, false if not found or unauthorized</returns>
+    Task<bool> ClearCurrentQuestionAsync(string randomizationId, string userId, CancellationToken cancellationToken = default);
 }

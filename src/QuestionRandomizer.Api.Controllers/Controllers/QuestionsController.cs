@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using QuestionRandomizer.Application.Commands.Questions.CreateQuestion;
 using QuestionRandomizer.Application.Commands.Questions.UpdateQuestion;
 using QuestionRandomizer.Application.Commands.Questions.DeleteQuestion;
+using QuestionRandomizer.Application.Commands.Questions.CreateQuestionsBatch;
+using QuestionRandomizer.Application.Commands.Questions.UpdateQuestionsBatch;
+using QuestionRandomizer.Application.Commands.Questions.RemoveCategoryFromQuestions;
+using QuestionRandomizer.Application.Commands.Questions.RemoveQualificationFromQuestions;
 using QuestionRandomizer.Application.Queries.Questions.GetQuestions;
 using QuestionRandomizer.Application.Queries.Questions.GetQuestionById;
 using QuestionRandomizer.Application.DTOs;
@@ -123,6 +127,74 @@ public class QuestionsController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var command = new DeleteQuestionCommand { Id = id };
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Create multiple questions in a batch
+    /// </summary>
+    /// <param name="command">List of questions to create</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Created questions</returns>
+    [HttpPost("batch")]
+    [ProducesResponseType(typeof(List<QuestionDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateQuestionsBatch(
+        [FromBody] CreateQuestionsBatchCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetQuestions), result);
+    }
+
+    /// <summary>
+    /// Update multiple questions in a batch
+    /// </summary>
+    /// <param name="command">List of questions to update</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPut("batch")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateQuestionsBatch(
+        [FromBody] UpdateQuestionsBatchCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Remove category from all questions that reference it
+    /// </summary>
+    /// <param name="categoryId">Category ID to remove</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpDelete("category/{categoryId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveCategoryFromQuestions(
+        string categoryId,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RemoveCategoryFromQuestionsCommand { CategoryId = categoryId };
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Remove qualification from all questions that reference it
+    /// </summary>
+    /// <param name="qualificationId">Qualification ID to remove</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpDelete("qualification/{qualificationId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveQualificationFromQuestions(
+        string qualificationId,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RemoveQualificationFromQuestionsCommand { QualificationId = qualificationId };
         await _mediator.Send(command, cancellationToken);
         return NoContent();
     }
