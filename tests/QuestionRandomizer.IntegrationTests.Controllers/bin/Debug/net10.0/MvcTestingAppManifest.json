@@ -1,6 +1,0 @@
-{
-  "QuestionRandomizer.Api.Controllers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Api.Controllers",
-  "QuestionRandomizer.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Application",
-  "QuestionRandomizer.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Domain",
-  "QuestionRandomizer.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\D\\Repositories\\question-randomizer-backend\\src\\QuestionRandomizer.Infrastructure"
-}
