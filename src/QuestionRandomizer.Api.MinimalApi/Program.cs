@@ -11,24 +11,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// Add ProblemDetails
-builder.Services.AddProblemDetails(options =>
+// Skip Swagger in Testing environment to avoid version conflicts
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
+    builder.Services.AddSwaggerGen();
+}
 
-    // Map domain exceptions to proper HTTP status codes
-    options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.NotFoundException>(StatusCodes.Status404NotFound);
-    options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.ValidationException>(StatusCodes.Status400BadRequest);
-    options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.UnauthorizedException>(StatusCodes.Status401Unauthorized);
-});
+// Add ProblemDetails (skip in Testing environment to avoid MVC dependencies)
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddProblemDetails(options =>
+    {
+        options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
+
+        // Map domain exceptions to proper HTTP status codes
+        options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.NotFoundException>(StatusCodes.Status404NotFound);
+        options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.ValidationException>(StatusCodes.Status400BadRequest);
+        options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.UnauthorizedException>(StatusCodes.Status401Unauthorized);
+    });
+}
 
 // Add Application layer (MediatR, FluentValidation)
 builder.Services.AddApplication();
 
 // Add Infrastructure layer (Firebase, Repositories)
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -63,13 +71,49 @@ builder.Logging.AddOpenTelemetry(options =>
 // Add Health Checks
 builder.Services.AddHealthChecks();
 
-// Add Authorization
+// Add Authentication and Authorization (will be overridden in Testing environment)
+builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-app.UseProblemDetails();
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.UseProblemDetails();
+}
+else
+{
+    // Simple exception handler for testing
+    app.UseExceptionHandler(new ExceptionHandlerOptions
+    {
+        AllowStatusCode404Response = true,
+        ExceptionHandler = async context =>
+        {
+            var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+            var exception = exceptionFeature?.Error;
+
+            if (exception is QuestionRandomizer.Domain.Exceptions.NotFoundException)
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+            }
+            else if (exception is QuestionRandomizer.Domain.Exceptions.ValidationException)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            }
+            else if (exception is QuestionRandomizer.Domain.Exceptions.UnauthorizedException)
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+
+            await Task.CompletedTask;
+        }
+    });
+}
 
 if (app.Environment.IsDevelopment())
 {

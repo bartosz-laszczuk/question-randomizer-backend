@@ -28,7 +28,11 @@
       "Bash(dotnet tool install:*)",
       "Bash(git check-ignore:*)",
       "Bash(cat:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(del testsQuestionRandomizer.IntegrationTests.MinimalApiUnitTest1.cs)",
+      "Bash(move testsQuestionRandomizer.IntegrationTests.MinimalApiUnitTest1.cs nul)",
+      "Bash(Select-String -Pattern \"Total tests|Passed|Failed|test result\")",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

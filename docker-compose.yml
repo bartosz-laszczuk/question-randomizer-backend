@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Controllers API (Port 5000)
+  controllers-api:
+    build:
+      context: .
+      dockerfile: src/QuestionRandomizer.Api.Controllers/Dockerfile
+    container_name: question-randomizer-controllers
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - Firebase__ProjectId=${FIREBASE_PROJECT_ID}
+      - Firebase__CredentialsPath=/app/firebase-credentials.json
+      - AgentService__BaseUrl=${AGENT_SERVICE_URL:-http://localhost:3002}
+      - AgentService__TimeoutSeconds=60
+      - Cors__AllowedOrigins__0=${CORS_ORIGIN:-http://localhost:4200}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - question-randomizer-network
+
+  # Minimal API (Port 5001)
+  minimal-api:
+    build:
+      context: .
+      dockerfile: src/QuestionRandomizer.Api.MinimalApi/Dockerfile
+    container_name: question-randomizer-minimal
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5001
+      - Firebase__ProjectId=${FIREBASE_PROJECT_ID}
+      - Firebase__CredentialsPath=/app/firebase-credentials.json
+      - AgentService__BaseUrl=${AGENT_SERVICE_URL:-http://localhost:3002}
+      - AgentService__TimeoutSeconds=60
+      - Cors__AllowedOrigins__0=${CORS_ORIGIN:-http://localhost:4200}
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - question-randomizer-network
+
+networks:
+  question-randomizer-network:
+    driver: bridge

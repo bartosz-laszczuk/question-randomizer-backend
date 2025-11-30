@@ -9,6 +9,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/QuestionRandomizer.E2ETests/QuestionRandomizer.E2ETests.csproj" />
     <Project Path="tests/QuestionRandomizer.IntegrationTests.Controllers/QuestionRandomizer.IntegrationTests.Controllers.csproj" />
+    <Project Path="tests/QuestionRandomizer.IntegrationTests.MinimalApi/QuestionRandomizer.IntegrationTests.MinimalApi.csproj" />
     <Project Path="tests/QuestionRandomizer.UnitTests/QuestionRandomizer.UnitTests.csproj" />
   </Folder>
 </Solution>
