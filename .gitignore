@@ -38,6 +38,15 @@ TestResults/
 *.coverage
 *.coveragexml
 
+# Coverage Reports
+coverage/
+coverage*.json
+coverage*.xml
+*.cobertura.xml
+coverage.opencover.xml
+lcov.info
+coverlet.*.json
+
 # NuGet
 *.nupkg
 *.snupkg

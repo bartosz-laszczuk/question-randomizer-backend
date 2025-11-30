@@ -18,7 +18,17 @@
       "Bash(dotnet clean:*)",
       "Bash(xargs basename:*)",
       "Bash(git rm:*)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(git init:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npm start)",
+      "Bash(del .env)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet tool install:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(cat:*)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "ask": []

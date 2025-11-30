@@ -92,8 +92,9 @@ app.UseAuthorization();
 app.MapQuestionEndpoints();
 app.MapCategoryEndpoints();
 app.MapQualificationEndpoints();
-app.MapRandomizationEndpoints();
 app.MapConversationEndpoints();
+app.MapRandomizationEndpoints();
+app.MapAgentEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

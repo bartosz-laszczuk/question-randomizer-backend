@@ -11,7 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Only add Swagger in Development environment (not Testing)
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddSwaggerGen();
+}
 
 // Add ProblemDetails
 builder.Services.AddProblemDetails(options =>
@@ -28,7 +33,7 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.AddApplication();
 
 // Add Infrastructure layer (Firebase, Repositories)
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // Add CORS
 builder.Services.AddCors(options =>

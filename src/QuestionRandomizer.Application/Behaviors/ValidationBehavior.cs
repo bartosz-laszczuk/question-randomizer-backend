@@ -2,6 +2,7 @@ namespace QuestionRandomizer.Application.Behaviors;
 
 using FluentValidation;
 using MediatR;
+using QuestionRandomizer.Domain.Exceptions;
 
 /// <summary>
 /// MediatR pipeline behavior that validates commands/queries using FluentValidation
@@ -38,7 +39,14 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         if (failures.Any())
         {
-            throw new ValidationException(failures);
+            var errors = failures
+                .GroupBy(x => x.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => x.ErrorMessage).ToArray()
+                );
+
+            throw new Domain.Exceptions.ValidationException(errors);
         }
 
         return await next();

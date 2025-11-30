@@ -5,6 +5,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Polly;
 using Polly.Extensions.Http;
 using QuestionRandomizer.Application.Interfaces;
@@ -23,11 +24,24 @@ public static class DependencyInjection
     /// </summary>
     /// <param name="services">The service collection</param>
     /// <param name="configuration">Application configuration</param>
+    /// <param name="environment">The hosting environment (optional)</param>
     /// <returns>The service collection for chaining</returns>
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment? environment = null)
     {
-        // Configure Firebase
-        services.AddFirebase(configuration);
+        // Configure Firebase (skip in Testing environment)
+        var isTestEnvironment = environment?.IsEnvironment("Testing") ?? false;
+        if (!isTestEnvironment)
+        {
+            services.AddFirebase(configuration);
+        }
+        else
+        {
+            // Register a null FirestoreDb for testing (will be mocked anyway)
+            services.AddSingleton<FirestoreDb>(provider => null!);
+        }
 
         // Register repositories
         services.AddScoped<IQuestionRepository, QuestionRepository>();
@@ -61,6 +75,15 @@ public static class DependencyInjection
 
     private static IServiceCollection AddFirebase(this IServiceCollection services, IConfiguration configuration)
     {
+        // Skip Firebase initialization in Testing environment
+        var skipFirebase = configuration.GetValue<bool>("Testing:SkipFirebase");
+        if (skipFirebase)
+        {
+            // Register a null FirestoreDb for testing (will be mocked anyway)
+            services.AddSingleton<FirestoreDb>(provider => null!);
+            return services;
+        }
+
         var firebaseSettings = configuration.GetSection("Firebase").Get<FirebaseSettings>();
 
         if (firebaseSettings == null || string.IsNullOrEmpty(firebaseSettings.ProjectId))
