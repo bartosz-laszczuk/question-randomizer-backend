@@ -18,7 +18,7 @@ Execute a **COMPLETE OPTIMIZATION** of CLAUDE.md. Do NOT present a plan - execut
 ### 1.2 Discover Existing Documentation
 Search for all documentation files:
 - `/docs/**/*.md`
-- `/ARCHITECTURE.md`, `/CONTRIBUTING.md`, etc.
+- Root-level documentation files (e.g., `/CONTRIBUTING.md`)
 - Project-specific documentation patterns
 
 ### 1.3 Analyze for Optimization
@@ -87,11 +87,11 @@ Create a documentation index at the top:
 ```markdown
 ## 📚 Documentation Index
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture
 - **[CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md)** - Code patterns
 - **[SETUP-GUIDE.md](./docs/SETUP-GUIDE.md)** - Setup instructions
 - **[CONFIGURATION.md](./docs/CONFIGURATION.md)** - Configuration guide
 - **[TESTING.md](./docs/TESTING.md)** - Testing strategy
+- **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide
 ```
 
 ### 3.2 Cross-Link Documents

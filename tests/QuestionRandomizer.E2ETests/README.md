@@ -227,4 +227,4 @@ When adding new E2E tests:
 
 - [TESTING.md](../../docs/TESTING.md) - Overall testing strategy
 - [Integration Tests](../QuestionRandomizer.IntegrationTests.Controllers/) - Integration test documentation
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) - System architecture
+- [CLAUDE.md](../../CLAUDE.md) - Developer guide with architecture overview

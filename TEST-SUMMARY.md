@@ -239,8 +239,7 @@ While testing is **complete and production-ready**, optional enhancements:
 - **Detailed Testing Guide:** [docs/TESTING.md](./docs/TESTING.md)
 - **Integration Test Summary:** [INTEGRATION-TEST-SUMMARY.md](./INTEGRATION-TEST-SUMMARY.md)
 - **E2E Test Documentation:** [tests/QuestionRandomizer.E2ETests/README.md](./tests/QuestionRandomizer.E2ETests/README.md)
-- **Architecture:** [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **CLAUDE.md:** [CLAUDE.md](./CLAUDE.md)
+- **Developer Guide:** [CLAUDE.md](./CLAUDE.md)
 
 ---
 

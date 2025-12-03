@@ -75,8 +75,7 @@ curl http://localhost:5001/health
 
 | Document | Description |
 |----------|-------------|
-| **[CLAUDE.md](./CLAUDE.md)** | Complete implementation guide and project overview |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | System architecture, database schema, data flow |
+| **[CLAUDE.md](./CLAUDE.md)** | Developer guide with architecture and project overview |
 | **[TESTING.md](./docs/TESTING.md)** | Testing strategy and 453-test suite details |
 | **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** | Deployment guide (Docker, Azure, AWS, K8s) |
 | **[SECURITY-AUDIT.md](./docs/SECURITY-AUDIT.md)** | Security checklist and best practices |
@@ -249,7 +248,7 @@ DELETE /api/questions/{id}        # Delete question
 ```
 
 ### Categories, Qualifications, Conversations, Randomization
-See **[ARCHITECTURE.md](./ARCHITECTURE.md#api-design)** for complete API specification.
+See **[CLAUDE.md](./CLAUDE.md#api-endpoints)** for complete API specification.
 
 ---
 
