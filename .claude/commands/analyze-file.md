@@ -2,20 +2,28 @@
 
 This command performs deep code analysis on a specified file to identify optimization opportunities, readability improvements, and adherence to best practices (Clean Code, DRY, SOLID).
 
+**Works with any programming language:** C#, TypeScript, JavaScript, Python, Java, Go, Rust, and more.
+
 ## Usage
 
 ```bash
 /analyze-file <file-path>
 ```
 
-**Example:** `/analyze-file libs/question-randomizer/dashboard/shared/data-access/src/store/question-list.store.ts`
+**Examples:**
+- `/analyze-file src/QuestionRandomizer.Application/Commands/CreateQuestionCommandHandler.cs`
+- `/analyze-file src/services/question-service.ts`
+- `/analyze-file app/models/question.py`
+- `/analyze-file pkg/handlers/question_handler.go`
 
 ## Your Task
 
 1. **Read and understand the file:**
    - Read the specified file completely
+   - **Auto-detect the programming language** based on file extension
    - Understand its purpose, dependencies, and context
-   - Identify the type of code (component, service, store, utility, etc.)
+   - Identify the type of code (component, service, repository, utility, etc.)
+   - Apply language-specific analysis where appropriate
 
 2. **Perform comprehensive analysis across these dimensions:**
 
@@ -38,7 +46,7 @@ This command performs deep code analysis on a specified file to identify optimiz
 
    **Parameter Names:**
    - **Descriptive:** Avoid abbreviations (bad: `usrId`, `qDic` - good: `userId`, `questionMap`)
-   - **Conventions:** Follow language conventions (TypeScript uses `Map` not `Dic` for Record types)
+   - **Conventions:** Follow language-specific naming conventions (camelCase, snake_case, PascalCase)
    - **Context:** Clear without needing to check types
 
    **Variable Names:**
@@ -48,8 +56,9 @@ This command performs deep code analysis on a specified file to identify optimiz
 
    ### Readability & Documentation
    **Code Documentation:**
-   - **JSDoc coverage:** Do all public methods/functions have JSDoc comments?
-   - **JSDoc completeness:** Do they document params, returns, exceptions, and include examples?
+   - **Documentation coverage:** Do all public methods/functions have documentation comments?
+   - **Documentation completeness:** Do they document parameters, return values, exceptions, and include examples?
+   - **Documentation style:** Does it follow language conventions? (XML docs for C#, JSDoc for TS/JS, docstrings for Python, Javadoc for Java, etc.)
    - **Comment quality:** Are comments explaining "why" not "what"?
    - **Self-documenting code:** Is the code clear enough that comments aren't needed for basic understanding?
 
@@ -122,22 +131,23 @@ This command performs deep code analysis on a specified file to identify optimiz
    - **Resource cleanup:** Are resources (subscriptions, connections) cleaned up on errors?
    - **Side effects:** Are partial state changes rolled back on error?
 
-   ### Immutability & State Management ⚠️ CRITICAL (Angular/Signals)
+   ### Immutability & State Management ⚠️ CRITICAL
    **Direct Mutations - Check for:**
-   - **Object mutations:** Are objects mutated directly? (e.g., `obj.property = value`)
-   - **Array mutations:** Using `.push()`, `.splice()`, `.sort()` instead of immutable alternatives?
-   - **Parameter mutations:** Are function parameters modified?
-   - **Spread operators:** Are new objects created with `{...obj}` or `[...array]`?
+   - **Object mutations:** Are objects mutated directly instead of creating new instances?
+   - **Collection mutations:** Using mutating operations (push, splice, sort, etc.) instead of immutable alternatives?
+   - **Parameter mutations:** Are function parameters modified directly?
+   - **Immutable patterns:** Are new instances created when updating state?
 
    **State Updates:**
-   - **Signal updates:** Are Angular Signals updated correctly (`.set()`, `.update()` with new references)?
-   - **Store patterns:** Does state management follow immutable patterns?
-   - **Reference equality:** Can change detection work properly with immutable updates?
+   - **State management:** Does state management follow immutable patterns?
+   - **Reference equality:** Are object references changed when state updates?
+   - **Framework compatibility:** Does mutation handling align with framework expectations? (React/Angular need new references, others may differ)
 
    **Impact:**
-   - **Change detection:** Will Angular detect changes correctly?
+   - **Change detection:** Will UI frameworks detect changes correctly?
    - **Debugging:** Are bugs caused by unintended mutations?
    - **Predictability:** Is state predictable and traceable?
+   - **Concurrency:** Are race conditions or shared state issues possible?
 
    ### Side Effects & Command-Query Separation
    **Pure Functions:**
@@ -158,7 +168,7 @@ This command performs deep code analysis on a specified file to identify optimiz
    - **Hidden dependencies:** Are there global state dependencies or static calls?
 
    **Test Existence:**
-   - **Test file:** Does a corresponding `.spec.ts` file exist?
+   - **Test file:** Does a corresponding test file exist? (Check for language conventions: `.test.js`, `.spec.ts`, `Test.cs`, `_test.go`, `_test.py`, etc.)
    - **Coverage:** What's the estimated test coverage for critical paths?
    - **Test quality:** Are tests meaningful or just achieving coverage?
    - **Edge cases:** Are error cases and edge cases tested?
@@ -178,22 +188,56 @@ This command performs deep code analysis on a specified file to identify optimiz
    ### Performance & Optimization
    - Unnecessary computations or loops
    - Inefficient algorithms or data structures
-   - Memory leaks (subscriptions not cleaned up, etc.)
+   - Memory leaks (unclosed resources, event handlers, etc.)
    - Redundant API calls or database queries
-   - Missing memoization opportunities
+   - Missing memoization/caching opportunities
 
-   ### TypeScript Best Practices
-   - Type safety (any types, missing type annotations)
+   ### Language-Specific Best Practices
+   **Auto-detect based on file extension and apply relevant checks:**
+
+   **C# (.cs):**
+   - Async/await usage (avoid blocking calls, use ConfigureAwait when appropriate)
+   - LINQ efficiency (avoid multiple enumerations, use appropriate methods)
+   - Nullable reference types (proper null handling)
+   - IDisposable pattern (using statements, proper resource cleanup)
+   - Expression-bodied members for simple properties/methods
+
+   **TypeScript/JavaScript (.ts, .js, .tsx, .jsx):**
+   - Type safety (avoid `any`, use proper type annotations)
+   - Async/await vs Promises
    - Proper use of generics
-   - Union types vs enums
-   - Unnecessary type assertions
+   - Optional chaining and nullish coalescing
+   - Framework-specific: React hooks, Angular change detection, Vue reactivity
 
-   ### Angular-Specific (if applicable)
-   - Change detection optimization
-   - OnPush strategy opportunities
-   - Proper lifecycle hook usage
-   - Signal patterns and computed values
-   - Dependency injection patterns
+   **Python (.py):**
+   - Type hints (PEP 484)
+   - List comprehensions vs loops
+   - Context managers (with statements)
+   - Generator usage for large datasets
+   - PEP 8 compliance
+
+   **Java (.java):**
+   - Stream API usage
+   - Optional handling for nulls
+   - Try-with-resources
+   - Proper exception hierarchy
+   - Generics and type safety
+
+   **Go (.go):**
+   - Error handling patterns (return errors, not panic)
+   - Goroutine and channel usage
+   - Defer statements for cleanup
+   - Interface design
+   - Context usage for cancellation
+
+   **Rust (.rs):**
+   - Ownership and borrowing
+   - Error handling (Result and Option types)
+   - Trait implementation
+   - Lifetime annotations
+   - Unsafe code justification
+
+   **Other languages:** Apply language-specific idioms and best practices as appropriate
 
 3. **Generate detailed report with:**
 
@@ -224,10 +268,10 @@ This command performs deep code analysis on a specified file to identify optimiz
 
    **⚠️ MANDATORY: Immutability Analysis Section**
    Always check for immutability violations:
-   - Identify direct object/array mutations
+   - Identify direct object/collection mutations
    - Check parameter mutations
-   - Verify proper Signal/store update patterns
-   - Assess impact on change detection
+   - Verify proper state update patterns
+   - Assess impact on framework/library expectations (if applicable)
 
    **⚠️ MANDATORY: Testability Assessment**
    Always evaluate testability:
@@ -262,21 +306,24 @@ This command performs deep code analysis on a specified file to identify optimiz
 
 ## Analysis Principles
 
+- **Language-adaptive:** Auto-detect language and apply appropriate idioms and best practices
 - **Context-aware:** Consider the file's role in the broader architecture
 - **Practical:** Prioritize impactful improvements over trivial changes
 - **Non-breaking:** Maintain existing functionality and API contracts
 - **Project-aligned:** Follow existing patterns and conventions in the codebase
 - **Balanced:** Don't over-engineer simple code
+- **Universal first, specific second:** Apply universal software engineering principles first, then layer on language-specific checks
 
 ## Example Output Format
 
 ```markdown
-# Code Analysis: question-list.store.ts
+# Code Analysis: [FileName]
 
 ## Summary
+- **Language:** [Auto-detected language]
 - **Overall Quality:** Good (7/10)
 - **Issues Found:** 18 (6 High, 8 Medium, 4 Low)
-- **Primary Concerns:** Immutability violations, error handling inconsistency, function naming
+- **Primary Concerns:** [Top 3 concerns]
 - **Quality Breakdown:**
   - Naming: 6/10 (4 poor function names)
   - Immutability: 5/10 (2 mutation violations)
@@ -287,34 +334,34 @@ This command performs deep code analysis on a specified file to identify optimiz
 ## Function Naming Analysis
 
 ### ✅ Good Function Names
-- `loadQuestions` - Clear, follows convention
-- `shouldRetry` - Proper boolean naming
-- `clearCache` - Action is explicit
+- `LoadQuestions` / `loadQuestions` / `load_questions` - Clear, follows convention
+- `ShouldRetry` / `shouldRetry` / `should_retry` - Proper boolean naming
+- `ClearCache` / `clearCache` / `clear_cache` - Action is explicit
 
 ### ⚠️ Functions Needing Better Names
 
-#### 1. `getNewQuestions` - Misleading Verb
-**Current:** `getNewQuestions(userId: string)`
-**Issue:** "get" implies retrieval without side effects, but this creates records in Firestore
+#### 1. `GetNewQuestions` - Misleading Verb
+**Current:** `GetNewQuestions(userId)` or `getNewQuestions(userId)`
+**Issue:** "get" implies retrieval without side effects, but this creates/persists records
 **Severity:** High
 
 **Recommended alternatives:**
-- `createQuestions(userId: string)` ✅ Best - matches actual behavior
-- `initializeQuestions(userId: string)` ✅ Alternative
-- `buildQuestionList(userId: string)` ✅ Alternative
+- `CreateQuestions(userId)` ✅ Best - matches actual behavior
+- `InitializeQuestions(userId)` ✅ Alternative
+- `BuildQuestionList(userId)` ✅ Alternative
 
 **Impact:** Violates Command-Query Separation, misleads developers
 
-#### 2. `updateQstCatLstId` - Poor Abbreviations
-**Current:** `updateQstCatLstId(qDic: Record<string, Question>)`
+#### 2. `UpdQstCatId` - Poor Abbreviations
+**Current:** `UpdQstCatId(qDic)` or `updQstCatId(qDic)`
 **Issue:** Heavy abbreviations make code unreadable
 **Severity:** High
 
 **Recommended alternatives:**
-- `updateQuestionCategoryListIds(questionMap: Record<string, Question>)` ✅ Best
-- `syncQuestionCategories(questionMap: Record<string, Question>)` ✅ Alternative
+- `UpdateQuestionCategoryIds(questionMap)` ✅ Best
+- `SyncQuestionCategories(questionMap)` ✅ Alternative
 
-**Parameter issue:** `qDic` → `questionMap` (TypeScript convention)
+**Parameter issue:** `qDic` → `questionMap` / `question_dict`
 
 **Impact:** Reduces code readability, harder to maintain
 
@@ -329,27 +376,29 @@ This command performs deep code analysis on a specified file to identify optimiz
 **Occurrences:** 6 methods (lines 45, 67, 89, 112, 134, 156)
 
 **Current Pattern:**
-```typescript
-catch (error: unknown) {
-  this.store.logError(
-    error instanceof Error ? error.message : 'Failed to perform action.'
-  );
+```
+// Pattern repeated 6 times
+catch (Exception ex)
+{
+    _logger.LogError(ex.Message ?? "Failed to perform action.");
 }
 ```
 
 **Issue:** Exact same error handling duplicated 6 times
 
 **Recommendation:**
-```typescript
+```
 // Create centralized helper
-private handleError(error: unknown, defaultMessage: string): void {
-  const errorMessage = error instanceof Error ? error.message : defaultMessage;
-  this.store.logError(errorMessage);
+private void HandleError(Exception ex, string defaultMessage)
+{
+    var errorMessage = ex.Message ?? defaultMessage;
+    _logger.LogError(errorMessage);
 }
 
 // Usage
-catch (error: unknown) {
-  this.handleError(error, 'Failed to perform action.');
+catch (Exception ex)
+{
+    HandleError(ex, "Failed to perform action.");
 }
 ```
 
@@ -359,51 +408,53 @@ catch (error: unknown) {
 
 ### ❌ Critical Violations Found
 
-#### 1. Direct Object Mutation in `updateQuestion`
+#### 1. Direct Object Mutation in `UpdateQuestion`
 **Severity:** High
 **Lines:** 78-79
 
 **Current Code:**
-```typescript
-const question = this.store.entity();
-question.title = newTitle; // ❌ Direct mutation!
-question.category = newCategory; // ❌ Direct mutation!
-this.store.setQuestion(question);
+```
+var question = GetQuestion();
+question.Title = newTitle; // ❌ Direct mutation!
+question.Category = newCategory; // ❌ Direct mutation!
+SaveQuestion(question);
 ```
 
-**Issue:** Mutates object directly, breaks Angular change detection with Signals
+**Issue:** Mutates object directly, breaks immutability expectations
 
 **Recommendation:**
-```typescript
-const question = this.store.entity();
-const updatedQuestion = {
-  ...question,
-  title: newTitle,
-  category: newCategory
-}; // ✅ New immutable object
-this.store.setQuestion(updatedQuestion);
+```
+var question = GetQuestion();
+var updatedQuestion = question with // C# record syntax
+{
+    Title = newTitle,
+    Category = newCategory
+}; // ✅ New immutable instance
+SaveQuestion(updatedQuestion);
 ```
 
-**Impact:** Critical - ensures Angular change detection works correctly
+**Impact:** Ensures predictable state management and proper change tracking
 
-#### 2. Array Mutation in `addItem`
+#### 2. Collection Mutation in `AddItem`
 **Severity:** High
 **Line:** 92
 
 **Current Code:**
-```typescript
-items.push(newItem); // ❌ Mutates array
+```
+items.Add(newItem); // ❌ Mutates collection
 ```
 
 **Recommendation:**
-```typescript
-items = [...items, newItem]; // ✅ New array reference
+```
+items = items.Append(newItem).ToList(); // ✅ New collection reference
+// or
+items = [..items, newItem]; // C# 12 collection expression
 ```
 
 ## Testability Assessment
 
 ### Current State
-- **Test file exists:** ✅ Yes (`question-list.store.spec.ts`)
+- **Test file exists:** ✅ Yes (test file detected)
 - **Coverage estimate:** ~70% (good but gaps remain)
 - **Testability score:** 7/10
 
@@ -414,41 +465,37 @@ items = [...items, newItem]; // ✅ New array reference
 **Issue:** Only happy paths tested, error scenarios missing
 
 **Missing tests:**
-- Error handling when Firestore fails
+- Error handling when external service fails
 - Behavior with invalid data
-- Network timeout scenarios
+- Timeout scenarios
 
 #### 2. Edge Cases
 **Severity:** Medium
 **Missing scenarios:**
-- Empty question list handling
+- Empty collection handling
 - Concurrent updates
-- Invalid IDs
+- Invalid IDs/null values
 
 **Recommendation:** Add 8-10 additional test cases for error paths and edge cases
 
 ### Testability Issues
 
 #### Hard-coded Dependencies
-**Line 34:** `private firestore = getFirestore()`
-**Issue:** Hard to mock in tests
-**Fix:** Inject via constructor/DI
+**Issue:** Dependencies created internally instead of injected
+**Fix:** Use dependency injection pattern
 
 ## High Priority Issues
 
-### 1. Function Complexity - `loadQuestions` method
+### 1. Function Complexity - `LoadQuestions` method
 **Lines:** 45-89
 **Issue:** Method is 45 lines long with nested conditionals and multiple responsibilities
 
-**Current Code:**
-[code snippet]
-
 **Recommendation:**
 Split into smaller methods:
-- `loadQuestions()` - orchestration
-- `fetchQuestionsFromFirestore()` - data fetching
-- `normalizeQuestionData()` - transformation
-- `updateStoreWithQuestions()` - state updates
+- `LoadQuestions()` - orchestration
+- `FetchQuestionsFromDatabase()` - data retrieval
+- `NormalizeQuestionData()` - transformation
+- `UpdateStateWithQuestions()` - state updates
 
 **Impact:** Improves testability, readability, and maintainability
 
@@ -483,7 +530,7 @@ If you'd like me to implement these improvements, I will proceed in this order:
 3. **Rename all functions with poor naming** (improves readability)
 4. **Add missing tests** (safety net before refactoring)
 5. **Refactor complex methods** (improves structure)
-6. **Add proper type annotations** (type safety)
+6. **Apply language-specific best practices** (idioms, type safety, etc.)
 7. **Extract duplicated logic** (DRY)
 8. **Update/add documentation** (completeness)
 
