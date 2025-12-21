@@ -2,6 +2,8 @@ using QuestionRandomizer.Application;
 using QuestionRandomizer.Infrastructure;
 using QuestionRandomizer.Api.MinimalApi.Endpoints;
 using Hellang.Middleware.ProblemDetails;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -71,8 +73,26 @@ builder.Logging.AddOpenTelemetry(options =>
 // Add Health Checks
 builder.Services.AddHealthChecks();
 
-// Add Authentication and Authorization (will be overridden in Testing environment)
-builder.Services.AddAuthentication();
+// Add Authentication & Authorization
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var projectId = builder.Configuration["Firebase:ProjectId"];
+    options.Authority = $"https://securetoken.google.com/{projectId}";
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = $"https://securetoken.google.com/{projectId}",
+        ValidateAudience = true,
+        ValidAudience = projectId,
+        ValidateLifetime = true
+    };
+});
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();

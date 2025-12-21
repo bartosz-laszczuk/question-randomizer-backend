@@ -1,6 +1,8 @@
 using QuestionRandomizer.Application;
 using QuestionRandomizer.Infrastructure;
 using Hellang.Middleware.ProblemDetails;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -47,6 +49,28 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+// Add Authentication & Authorization
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var projectId = builder.Configuration["Firebase:ProjectId"];
+    options.Authority = $"https://securetoken.google.com/{projectId}";
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = $"https://securetoken.google.com/{projectId}",
+        ValidateAudience = true,
+        ValidAudience = projectId,
+        ValidateLifetime = true
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Add OpenTelemetry
 builder.Services.AddOpenTelemetry()
