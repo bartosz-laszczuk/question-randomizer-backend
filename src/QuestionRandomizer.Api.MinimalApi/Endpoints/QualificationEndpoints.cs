@@ -3,6 +3,7 @@ namespace QuestionRandomizer.Api.MinimalApi.Endpoints;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Qualifications.CreateQualification;
 using QuestionRandomizer.Application.Commands.Qualifications.UpdateQualification;
 using QuestionRandomizer.Application.Commands.Qualifications.DeleteQualification;
@@ -19,6 +20,7 @@ public static class QualificationEndpoints
     public static void MapQualificationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/qualifications")
+            .RequireAuthorization(AuthorizationPolicies.UserPolicy)
             .WithTags("Qualifications");
 
         group.MapGet("", GetQualifications)

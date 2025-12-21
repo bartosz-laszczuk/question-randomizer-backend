@@ -3,6 +3,7 @@ namespace QuestionRandomizer.Api.MinimalApi.Endpoints;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Randomizations.CreateRandomization;
 using QuestionRandomizer.Application.Commands.Randomizations.UpdateRandomization;
 using QuestionRandomizer.Application.Commands.Randomizations.ClearCurrentQuestion;
@@ -28,6 +29,7 @@ public static class RandomizationEndpoints
     public static void MapRandomizationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/randomizations")
+            .RequireAuthorization(AuthorizationPolicies.UserPolicy)
             .WithTags("Randomizations");
 
         group.MapGet("", GetRandomization)

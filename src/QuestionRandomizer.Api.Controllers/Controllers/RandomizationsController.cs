@@ -1,7 +1,9 @@
 namespace QuestionRandomizer.Api.Controllers;
 
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Randomizations.CreateRandomization;
 using QuestionRandomizer.Application.Commands.Randomizations.UpdateRandomization;
 using QuestionRandomizer.Application.Commands.Randomizations.ClearCurrentQuestion;
@@ -24,6 +26,7 @@ using QuestionRandomizer.Application.DTOs;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = AuthorizationPolicies.UserPolicy)]
 public class RandomizationsController : ControllerBase
 {
     private readonly IMediator _mediator;

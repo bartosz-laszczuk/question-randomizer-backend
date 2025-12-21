@@ -1,6 +1,7 @@
 namespace QuestionRandomizer.Api.MinimalApi.Endpoints;
 
 using Microsoft.AspNetCore.Http.HttpResults;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Interfaces;
 using System.Security.Claims;
 using System.Text.Json;
@@ -14,7 +15,7 @@ public static class AgentEndpoints
     {
         var group = routes.MapGroup("/api/agent")
             .WithTags("Agent")
-            .RequireAuthorization();
+            .RequireAuthorization(AuthorizationPolicies.UserPolicy);
 
         group.MapPost("/execute", ExecuteTask)
             .WithName("ExecuteAgentTask")

@@ -3,6 +3,7 @@ namespace QuestionRandomizer.Api.Controllers.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicies.UserPolicy)]
 public class AgentController : ControllerBase
 {
     private readonly IAgentService _agentService;

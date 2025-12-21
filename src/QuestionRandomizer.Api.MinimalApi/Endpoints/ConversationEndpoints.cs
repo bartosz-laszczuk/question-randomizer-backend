@@ -3,6 +3,7 @@ namespace QuestionRandomizer.Api.MinimalApi.Endpoints;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Conversations.CreateConversation;
 using QuestionRandomizer.Application.Commands.Conversations.UpdateConversationTimestamp;
 using QuestionRandomizer.Application.Commands.Conversations.DeleteConversation;
@@ -20,6 +21,7 @@ public static class ConversationEndpoints
     public static void MapConversationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/conversations")
+            .RequireAuthorization(AuthorizationPolicies.UserPolicy)
             .WithTags("Conversations");
 
         // Conversation endpoints

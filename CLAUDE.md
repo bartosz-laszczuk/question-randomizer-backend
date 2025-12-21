@@ -14,6 +14,7 @@
 - **[CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md)** - All code templates and patterns
 - **[SETUP-GUIDE.md](./docs/SETUP-GUIDE.md)** - Complete step-by-step setup instructions
 - **[CONFIGURATION.md](./docs/CONFIGURATION.md)** - Configuration details and examples
+- **[AUTHORIZATION.md](./docs/AUTHORIZATION.md)** - Authorization system (roles, policies, permissions)
 - **[DUAL-API-GUIDE.md](./docs/DUAL-API-GUIDE.md)** - Controllers vs Minimal API comparison
 - **[TESTING.md](./docs/TESTING.md)** - Testing strategy and examples
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide for Docker, Azure, AWS, Kubernetes
@@ -412,13 +413,19 @@ curl http://localhost:5001/api/questions  # Minimal API
 - Use production credentials in development
 - Hardcode secrets in code
 - Share credentials in plain text
+- Skip authorization checks in handlers
+- Trust client-provided userId values
 
 ### ✅ ALWAYS:
-- Verify userId matches authenticated user
+- Verify userId matches authenticated user (via ICurrentUserService)
+- Use authorization policies on all endpoints
+- Check ownership before modifying resources
 - Use HTTPS in production
 - Implement rate limiting
 - Validate all user input
 - Store secrets in secure vaults (Azure Key Vault, etc.)
+
+**📖 See [AUTHORIZATION.md](./docs/AUTHORIZATION.md) for complete authorization system documentation.**
 
 ---
 

@@ -3,6 +3,7 @@ namespace QuestionRandomizer.Api.MinimalApi.Endpoints;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Categories.CreateCategory;
 using QuestionRandomizer.Application.Commands.Categories.CreateCategoriesBatch;
 using QuestionRandomizer.Application.Commands.Categories.UpdateCategory;
@@ -22,6 +23,7 @@ public static class CategoryEndpoints
     public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/categories")
+            .RequireAuthorization(AuthorizationPolicies.UserPolicy)
             .WithTags("Categories");
 
         group.MapGet("", GetCategories)

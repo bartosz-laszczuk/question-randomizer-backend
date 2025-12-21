@@ -59,6 +59,7 @@ public static class DependencyInjection
         // Register services
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
 
         // Register Agent Service with HttpClient and Polly retry policies
         services.AddHttpClient<IAgentService, AgentService>(client =>

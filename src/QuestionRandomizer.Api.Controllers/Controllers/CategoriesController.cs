@@ -1,7 +1,9 @@
 namespace QuestionRandomizer.Api.Controllers.Controllers;
 
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Categories.CreateCategory;
 using QuestionRandomizer.Application.Commands.Categories.CreateCategoriesBatch;
 using QuestionRandomizer.Application.Commands.Categories.UpdateCategory;
@@ -15,6 +17,7 @@ using QuestionRandomizer.Application.DTOs;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = AuthorizationPolicies.UserPolicy)]
 public class CategoriesController : ControllerBase
 {
     private readonly IMediator _mediator;

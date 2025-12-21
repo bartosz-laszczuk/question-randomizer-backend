@@ -1,6 +1,7 @@
 namespace QuestionRandomizer.Application.Queries.Questions.GetQuestions;
 
 using MediatR;
+using QuestionRandomizer.Application.Common;
 using QuestionRandomizer.Application.DTOs;
 using QuestionRandomizer.Application.Interfaces;
 using QuestionRandomizer.Domain.Interfaces;
@@ -8,22 +9,21 @@ using QuestionRandomizer.Domain.Interfaces;
 /// <summary>
 /// Handler for GetQuestionsQuery
 /// </summary>
-public class GetQuestionsQueryHandler : IRequestHandler<GetQuestionsQuery, List<QuestionDto>>
+public class GetQuestionsQueryHandler : AuthorizedHandlerBase, IRequestHandler<GetQuestionsQuery, List<QuestionDto>>
 {
     private readonly IQuestionRepository _questionRepository;
-    private readonly ICurrentUserService _currentUserService;
 
     public GetQuestionsQueryHandler(
         IQuestionRepository questionRepository,
         ICurrentUserService currentUserService)
+        : base(currentUserService)
     {
         _questionRepository = questionRepository;
-        _currentUserService = currentUserService;
     }
 
     public async Task<List<QuestionDto>> Handle(GetQuestionsQuery request, CancellationToken cancellationToken)
     {
-        var userId = _currentUserService.GetUserId();
+        var userId = GetCurrentUserId();
 
         var questions = string.IsNullOrEmpty(request.CategoryId)
             ? await _questionRepository.GetByUserIdAsync(userId, cancellationToken)

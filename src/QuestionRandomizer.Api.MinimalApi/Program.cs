@@ -1,5 +1,6 @@
 using QuestionRandomizer.Application;
 using QuestionRandomizer.Infrastructure;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Api.MinimalApi.Endpoints;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -93,7 +94,35 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+// Add Authorization with Policies
+builder.Services.AddAuthorization(options =>
+{
+    // User Policy - Basic authenticated user (default)
+    options.AddPolicy(AuthorizationPolicies.UserPolicy, policy =>
+        policy.RequireAuthenticatedUser());
+
+    // Premium User Policy - Premium tier users and admins
+    options.AddPolicy(AuthorizationPolicies.PremiumUserPolicy, policy =>
+        policy.RequireClaim("role",
+            AuthorizationPolicies.PremiumUserRole,
+            AuthorizationPolicies.AdminRole)); // Admin has all premium features
+
+    // Admin Policy - Platform administrator only
+    options.AddPolicy(AuthorizationPolicies.AdminPolicy, policy =>
+        policy.RequireClaim("role", AuthorizationPolicies.AdminRole));
+
+    // Feature-specific policies
+    options.AddPolicy("CanUseAdvancedAI", policy =>
+        policy.RequireClaim("role",
+            AuthorizationPolicies.PremiumUserRole,
+            AuthorizationPolicies.AdminRole));
+
+    options.AddPolicy("CanManageUsers", policy =>
+        policy.RequireClaim("role", AuthorizationPolicies.AdminRole));
+
+    options.AddPolicy("CanViewAllQuestions", policy =>
+        policy.RequireClaim("role", AuthorizationPolicies.AdminRole));
+});
 
 var app = builder.Build();
 
@@ -159,6 +188,7 @@ app.MapQualificationEndpoints();
 app.MapConversationEndpoints();
 app.MapRandomizationEndpoints();
 app.MapAgentEndpoints();
+app.MapAdminEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

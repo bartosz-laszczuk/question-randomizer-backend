@@ -1,5 +1,6 @@
 using QuestionRandomizer.Application;
 using QuestionRandomizer.Infrastructure;
+using QuestionRandomizer.Infrastructure.Authorization;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -70,7 +71,35 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+// Add Authorization with Policies
+builder.Services.AddAuthorization(options =>
+{
+    // User Policy - Basic authenticated user (default)
+    options.AddPolicy(AuthorizationPolicies.UserPolicy, policy =>
+        policy.RequireAuthenticatedUser());
+
+    // Premium User Policy - Premium tier users and admins
+    options.AddPolicy(AuthorizationPolicies.PremiumUserPolicy, policy =>
+        policy.RequireClaim("role",
+            AuthorizationPolicies.PremiumUserRole,
+            AuthorizationPolicies.AdminRole)); // Admin has all premium features
+
+    // Admin Policy - Platform administrator only
+    options.AddPolicy(AuthorizationPolicies.AdminPolicy, policy =>
+        policy.RequireClaim("role", AuthorizationPolicies.AdminRole));
+
+    // Feature-specific policies
+    options.AddPolicy("CanUseAdvancedAI", policy =>
+        policy.RequireClaim("role",
+            AuthorizationPolicies.PremiumUserRole,
+            AuthorizationPolicies.AdminRole));
+
+    options.AddPolicy("CanManageUsers", policy =>
+        policy.RequireClaim("role", AuthorizationPolicies.AdminRole));
+
+    options.AddPolicy("CanViewAllQuestions", policy =>
+        policy.RequireClaim("role", AuthorizationPolicies.AdminRole));
+});
 
 // Add OpenTelemetry
 builder.Services.AddOpenTelemetry()

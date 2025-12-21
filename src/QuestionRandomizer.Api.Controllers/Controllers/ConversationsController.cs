@@ -1,7 +1,9 @@
 namespace QuestionRandomizer.Api.Controllers;
 
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Application.Commands.Conversations.CreateConversation;
 using QuestionRandomizer.Application.Commands.Conversations.UpdateConversationTimestamp;
 using QuestionRandomizer.Application.Commands.Conversations.DeleteConversation;
@@ -16,6 +18,7 @@ using QuestionRandomizer.Application.DTOs;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = AuthorizationPolicies.UserPolicy)]
 public class ConversationsController : ControllerBase
 {
     private readonly IMediator _mediator;
