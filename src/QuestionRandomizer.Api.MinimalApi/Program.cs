@@ -2,7 +2,6 @@ using QuestionRandomizer.Application;
 using QuestionRandomizer.Infrastructure;
 using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.Api.MinimalApi.Endpoints;
-using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
@@ -21,19 +20,8 @@ if (!builder.Environment.IsEnvironment("Testing"))
     builder.Services.AddSwaggerGen();
 }
 
-// Add ProblemDetails (skip in Testing environment to avoid MVC dependencies)
-if (!builder.Environment.IsEnvironment("Testing"))
-{
-    builder.Services.AddProblemDetails(options =>
-    {
-        options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
-
-        // Map domain exceptions to proper HTTP status codes
-        options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.NotFoundException>(StatusCodes.Status404NotFound);
-        options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.ValidationException>(StatusCodes.Status400BadRequest);
-        options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.UnauthorizedException>(StatusCodes.Status401Unauthorized);
-    });
-}
+// Add built-in ProblemDetails support for Minimal APIs
+builder.Services.AddProblemDetails();
 
 // Add Application layer (MediatR, FluentValidation)
 builder.Services.AddApplication();
@@ -127,42 +115,8 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    app.UseProblemDetails();
-}
-else
-{
-    // Simple exception handler for testing
-    app.UseExceptionHandler(new ExceptionHandlerOptions
-    {
-        AllowStatusCode404Response = true,
-        ExceptionHandler = async context =>
-        {
-            var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
-            var exception = exceptionFeature?.Error;
-
-            if (exception is QuestionRandomizer.Domain.Exceptions.NotFoundException)
-            {
-                context.Response.StatusCode = StatusCodes.Status404NotFound;
-            }
-            else if (exception is QuestionRandomizer.Domain.Exceptions.ValidationException)
-            {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            }
-            else if (exception is QuestionRandomizer.Domain.Exceptions.UnauthorizedException)
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            }
-            else
-            {
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            }
-
-            await Task.CompletedTask;
-        }
-    });
-}
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
@@ -188,7 +142,6 @@ app.MapQualificationEndpoints();
 app.MapConversationEndpoints();
 app.MapRandomizationEndpoints();
 app.MapAgentEndpoints();
-app.MapAdminEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

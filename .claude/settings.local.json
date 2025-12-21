@@ -32,7 +32,9 @@
       "Bash(del testsQuestionRandomizer.IntegrationTests.MinimalApiUnitTest1.cs)",
       "Bash(move testsQuestionRandomizer.IntegrationTests.MinimalApiUnitTest1.cs nul)",
       "Bash(Select-String -Pattern \"Total tests|Passed|Failed|test result\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(timeout 15 dotnet run:*)"
     ],
     "deny": [],
     "ask": []
