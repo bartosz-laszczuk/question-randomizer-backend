@@ -5,11 +5,22 @@
     <Project Path="src/QuestionRandomizer.Application/QuestionRandomizer.Application.csproj" />
     <Project Path="src/QuestionRandomizer.Domain/QuestionRandomizer.Domain.csproj" />
     <Project Path="src/QuestionRandomizer.Infrastructure/QuestionRandomizer.Infrastructure.csproj" />
+    <Project Path="src/QuestionRandomizer.SharedKernel/QuestionRandomizer.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/QuestionRandomizer.Modules.Agent/QuestionRandomizer.Modules.Agent.csproj" />
+    <Project Path="src/Modules/QuestionRandomizer.Modules.Conversations/QuestionRandomizer.Modules.Conversations.csproj" />
+    <Project Path="src/Modules/QuestionRandomizer.Modules.Questions/QuestionRandomizer.Modules.Questions.csproj" />
+    <Project Path="src/Modules/QuestionRandomizer.Modules.Randomization/QuestionRandomizer.Modules.Randomization.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/QuestionRandomizer.E2ETests/QuestionRandomizer.E2ETests.csproj" />
     <Project Path="tests/QuestionRandomizer.IntegrationTests.Controllers/QuestionRandomizer.IntegrationTests.Controllers.csproj" />
     <Project Path="tests/QuestionRandomizer.IntegrationTests.MinimalApi/QuestionRandomizer.IntegrationTests.MinimalApi.csproj" />
+    <Project Path="tests/QuestionRandomizer.Modules.Agent.Tests/QuestionRandomizer.Modules.Agent.Tests.csproj" />
+    <Project Path="tests/QuestionRandomizer.Modules.Conversations.Tests/QuestionRandomizer.Modules.Conversations.Tests.csproj" />
+    <Project Path="tests/QuestionRandomizer.Modules.Questions.Tests/QuestionRandomizer.Modules.Questions.Tests.csproj" />
+    <Project Path="tests/QuestionRandomizer.Modules.Randomization.Tests/QuestionRandomizer.Modules.Randomization.Tests.csproj" />
     <Project Path="tests/QuestionRandomizer.UnitTests/QuestionRandomizer.UnitTests.csproj" />
   </Folder>
 </Solution>

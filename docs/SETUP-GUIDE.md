@@ -2,6 +2,9 @@
 
 Complete step-by-step guide to set up the Question Randomizer Backend project from scratch.
 
+**Architecture:** Modular Monolith (migrated from Clean Architecture on 2025-12-22)
+**Last Updated:** 2025-12-22
+
 ---
 
 ## Prerequisites
@@ -13,9 +16,20 @@ Before starting, ensure you have:
 - ✅ **Docker Desktop** (for integration tests with TestContainers)
 - ✅ **Git** for version control
 
+**NOTE:** This guide reflects the current Modular Monolith architecture. For the migration history from Clean Architecture, see [MIGRATION-SUMMARY.md](../MIGRATION-SUMMARY.md).
+
 ---
 
 ## Step 1: Create Solution and Projects
+
+**Current Architecture:** Modular Monolith with vertical slices
+
+The solution now consists of:
+- **SharedKernel** - Cross-cutting concerns and domain events infrastructure
+- **4 Business Modules** - Questions, Conversations, Randomization, Agent
+- **2 API Projects** - Controllers and Minimal API
+- **8 Test Projects** - Module tests + integration tests + E2E tests
+- **3 Legacy Projects** - Domain, Application, Infrastructure (to be removed later)
 
 ```bash
 # Navigate to project directory
@@ -24,18 +38,28 @@ cd C:\D\Repositories\question-randomizer-backend
 # Create solution
 dotnet new sln -n QuestionRandomizer
 
-# Create Domain project (Class Library)
-dotnet new classlib -n QuestionRandomizer.Domain -o src/QuestionRandomizer.Domain
-dotnet sln add src/QuestionRandomizer.Domain
+# ===== SHARED KERNEL =====
+dotnet new classlib -n QuestionRandomizer.SharedKernel -o src/QuestionRandomizer.SharedKernel
+dotnet sln add src/QuestionRandomizer.SharedKernel
 
-# Create Application project (Class Library)
-dotnet new classlib -n QuestionRandomizer.Application -o src/QuestionRandomizer.Application
-dotnet sln add src/QuestionRandomizer.Application
+# ===== BUSINESS MODULES =====
+# Create Questions Module
+dotnet new classlib -n QuestionRandomizer.Modules.Questions -o src/Modules/QuestionRandomizer.Modules.Questions
+dotnet sln add src/Modules/QuestionRandomizer.Modules.Questions
 
-# Create Infrastructure project (Class Library)
-dotnet new classlib -n QuestionRandomizer.Infrastructure -o src/QuestionRandomizer.Infrastructure
-dotnet sln add src/QuestionRandomizer.Infrastructure
+# Create Conversations Module
+dotnet new classlib -n QuestionRandomizer.Modules.Conversations -o src/Modules/QuestionRandomizer.Modules.Conversations
+dotnet sln add src/Modules/QuestionRandomizer.Modules.Conversations
 
+# Create Randomization Module
+dotnet new classlib -n QuestionRandomizer.Modules.Randomization -o src/Modules/QuestionRandomizer.Modules.Randomization
+dotnet sln add src/Modules/QuestionRandomizer.Modules.Randomization
+
+# Create Agent Module
+dotnet new classlib -n QuestionRandomizer.Modules.Agent -o src/Modules/QuestionRandomizer.Modules.Agent
+dotnet sln add src/Modules/QuestionRandomizer.Modules.Agent
+
+# ===== API PROJECTS =====
 # Create Controllers API project (Web API)
 dotnet new webapi -n QuestionRandomizer.Api.Controllers -o src/QuestionRandomizer.Api.Controllers
 dotnet sln add src/QuestionRandomizer.Api.Controllers
@@ -44,76 +68,168 @@ dotnet sln add src/QuestionRandomizer.Api.Controllers
 dotnet new webapi -n QuestionRandomizer.Api.MinimalApi -o src/QuestionRandomizer.Api.MinimalApi
 dotnet sln add src/QuestionRandomizer.Api.MinimalApi
 
-# Create Test projects
-dotnet new xunit -n QuestionRandomizer.UnitTests -o tests/QuestionRandomizer.UnitTests
-dotnet sln add tests/QuestionRandomizer.UnitTests
+# ===== MODULE TEST PROJECTS =====
+dotnet new xunit -n QuestionRandomizer.Modules.Questions.Tests -o tests/QuestionRandomizer.Modules.Questions.Tests
+dotnet sln add tests/QuestionRandomizer.Modules.Questions.Tests
 
+dotnet new xunit -n QuestionRandomizer.Modules.Conversations.Tests -o tests/QuestionRandomizer.Modules.Conversations.Tests
+dotnet sln add tests/QuestionRandomizer.Modules.Conversations.Tests
+
+dotnet new xunit -n QuestionRandomizer.Modules.Randomization.Tests -o tests/QuestionRandomizer.Modules.Randomization.Tests
+dotnet sln add tests/QuestionRandomizer.Modules.Randomization.Tests
+
+dotnet new xunit -n QuestionRandomizer.Modules.Agent.Tests -o tests/QuestionRandomizer.Modules.Agent.Tests
+dotnet sln add tests/QuestionRandomizer.Modules.Agent.Tests
+
+# ===== INTEGRATION & E2E TEST PROJECTS =====
 dotnet new xunit -n QuestionRandomizer.IntegrationTests.Controllers -o tests/QuestionRandomizer.IntegrationTests.Controllers
 dotnet sln add tests/QuestionRandomizer.IntegrationTests.Controllers
 
+dotnet new xunit -n QuestionRandomizer.IntegrationTests.MinimalApi -o tests/QuestionRandomizer.IntegrationTests.MinimalApi
+dotnet sln add tests/QuestionRandomizer.IntegrationTests.MinimalApi
+
 dotnet new xunit -n QuestionRandomizer.E2ETests -o tests/QuestionRandomizer.E2ETests
 dotnet sln add tests/QuestionRandomizer.E2ETests
+
+dotnet new xunit -n QuestionRandomizer.UnitTests -o tests/QuestionRandomizer.UnitTests
+dotnet sln add tests/QuestionRandomizer.UnitTests
+
+# ===== LEGACY PROJECTS (Optional - for gradual migration) =====
+# These can be skipped if starting fresh with modular monolith
+# dotnet new classlib -n QuestionRandomizer.Domain -o src/QuestionRandomizer.Domain
+# dotnet sln add src/QuestionRandomizer.Domain
+# dotnet new classlib -n QuestionRandomizer.Application -o src/QuestionRandomizer.Application
+# dotnet sln add src/QuestionRandomizer.Application
+# dotnet new classlib -n QuestionRandomizer.Infrastructure -o src/QuestionRandomizer.Infrastructure
+# dotnet sln add src/QuestionRandomizer.Infrastructure
 ```
+
+**Total Projects:** 18 (5 modules + 2 APIs + 3 legacy + 8 tests)
 
 ---
 
 ## Step 2: Add Project References
 
+**Modular Architecture Principle:** Modules only reference SharedKernel (never each other directly).
+
 ```bash
-# Application depends on Domain
-dotnet add src/QuestionRandomizer.Application reference src/QuestionRandomizer.Domain
+# ===== MODULES → SHAREDKERNEL =====
+# Each module only references SharedKernel (no inter-module dependencies)
+dotnet add src/Modules/QuestionRandomizer.Modules.Questions reference src/QuestionRandomizer.SharedKernel
+dotnet add src/Modules/QuestionRandomizer.Modules.Conversations reference src/QuestionRandomizer.SharedKernel
+dotnet add src/Modules/QuestionRandomizer.Modules.Randomization reference src/QuestionRandomizer.SharedKernel
+dotnet add src/Modules/QuestionRandomizer.Modules.Agent reference src/QuestionRandomizer.SharedKernel
 
-# Infrastructure depends on Domain and Application
-dotnet add src/QuestionRandomizer.Infrastructure reference src/QuestionRandomizer.Domain
-dotnet add src/QuestionRandomizer.Infrastructure reference src/QuestionRandomizer.Application
+# Cross-module event reference (ONLY exception - for domain events)
+# Randomization subscribes to CategoryDeletedEvent from Questions
+dotnet add src/Modules/QuestionRandomizer.Modules.Randomization reference src/Modules/QuestionRandomizer.Modules.Questions
 
-# Controllers API depends on Application and Infrastructure
-dotnet add src/QuestionRandomizer.Api.Controllers reference src/QuestionRandomizer.Application
-dotnet add src/QuestionRandomizer.Api.Controllers reference src/QuestionRandomizer.Infrastructure
+# ===== API PROJECTS → MODULES =====
+# Controllers API references SharedKernel and all modules
+dotnet add src/QuestionRandomizer.Api.Controllers reference src/QuestionRandomizer.SharedKernel
+dotnet add src/QuestionRandomizer.Api.Controllers reference src/Modules/QuestionRandomizer.Modules.Questions
+dotnet add src/QuestionRandomizer.Api.Controllers reference src/Modules/QuestionRandomizer.Modules.Conversations
+dotnet add src/QuestionRandomizer.Api.Controllers reference src/Modules/QuestionRandomizer.Modules.Randomization
+dotnet add src/QuestionRandomizer.Api.Controllers reference src/Modules/QuestionRandomizer.Modules.Agent
 
-# Minimal API depends on Application and Infrastructure
-dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/QuestionRandomizer.Application
-dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/QuestionRandomizer.Infrastructure
+# Minimal API references SharedKernel and all modules
+dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/QuestionRandomizer.SharedKernel
+dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/Modules/QuestionRandomizer.Modules.Questions
+dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/Modules/QuestionRandomizer.Modules.Conversations
+dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/Modules/QuestionRandomizer.Modules.Randomization
+dotnet add src/QuestionRandomizer.Api.MinimalApi reference src/Modules/QuestionRandomizer.Modules.Agent
 
-# Unit Tests reference Application and Domain
-dotnet add tests/QuestionRandomizer.UnitTests reference src/QuestionRandomizer.Application
-dotnet add tests/QuestionRandomizer.UnitTests reference src/QuestionRandomizer.Domain
+# ===== MODULE TESTS → MODULES =====
+# Each module test project references its module and SharedKernel
+dotnet add tests/QuestionRandomizer.Modules.Questions.Tests reference src/QuestionRandomizer.SharedKernel
+dotnet add tests/QuestionRandomizer.Modules.Questions.Tests reference src/Modules/QuestionRandomizer.Modules.Questions
 
-# Integration Tests reference Controllers API
+dotnet add tests/QuestionRandomizer.Modules.Conversations.Tests reference src/QuestionRandomizer.SharedKernel
+dotnet add tests/QuestionRandomizer.Modules.Conversations.Tests reference src/Modules/QuestionRandomizer.Modules.Conversations
+
+dotnet add tests/QuestionRandomizer.Modules.Randomization.Tests reference src/QuestionRandomizer.SharedKernel
+dotnet add tests/QuestionRandomizer.Modules.Randomization.Tests reference src/Modules/QuestionRandomizer.Modules.Randomization
+
+dotnet add tests/QuestionRandomizer.Modules.Agent.Tests reference src/QuestionRandomizer.SharedKernel
+dotnet add tests/QuestionRandomizer.Modules.Agent.Tests reference src/Modules/QuestionRandomizer.Modules.Agent
+
+# ===== INTEGRATION TESTS → API PROJECTS =====
 dotnet add tests/QuestionRandomizer.IntegrationTests.Controllers reference src/QuestionRandomizer.Api.Controllers
+dotnet add tests/QuestionRandomizer.IntegrationTests.MinimalApi reference src/QuestionRandomizer.Api.MinimalApi
 
-# E2E Tests reference Controllers API
+# ===== E2E TESTS → API PROJECT =====
 dotnet add tests/QuestionRandomizer.E2ETests reference src/QuestionRandomizer.Api.Controllers
+
+# ===== LEGACY UNIT TESTS (Optional) =====
+# dotnet add tests/QuestionRandomizer.UnitTests reference src/QuestionRandomizer.Application
+# dotnet add tests/QuestionRandomizer.UnitTests reference src/QuestionRandomizer.Domain
 ```
+
+**Key Dependencies:**
+- **Modules** → SharedKernel only (except Randomization → Questions for events)
+- **APIs** → All Modules + SharedKernel
+- **Module Tests** → Their Module + SharedKernel
+- **Integration Tests** → API Projects
 
 ---
 
 ## Step 3: Install NuGet Packages
 
-### Domain Project (No external dependencies!)
+### SharedKernel Project
 ```bash
-# Domain has NO external dependencies - keep it pure!
+cd src/QuestionRandomizer.SharedKernel
+dotnet add package MediatR --version 12.4.1
+dotnet add package FirebaseAdmin --version 3.0.1
+dotnet add package Google.Cloud.Firestore --version 3.8.0
+dotnet add package Microsoft.Extensions.Logging.Abstractions
+dotnet add package Microsoft.Extensions.DependencyInjection.Abstractions
+dotnet add package Microsoft.AspNetCore.Http
+cd ../..
 ```
 
-### Application Project
+### Questions Module
 ```bash
-cd src/QuestionRandomizer.Application
+cd src/Modules/QuestionRandomizer.Modules.Questions
 dotnet add package MediatR --version 12.4.1
 dotnet add package FluentValidation --version 11.10.0
 dotnet add package FluentValidation.DependencyInjectionExtensions --version 11.10.0
+dotnet add package Google.Cloud.Firestore --version 3.8.0
 dotnet add package Microsoft.Extensions.Logging.Abstractions
-cd ../..
+cd ../../..
 ```
 
-### Infrastructure Project
+### Conversations Module
 ```bash
-cd src/QuestionRandomizer.Infrastructure
-dotnet add package FirebaseAdmin --version 3.0.1
+cd src/Modules/QuestionRandomizer.Modules.Conversations
+dotnet add package MediatR --version 12.4.1
+dotnet add package FluentValidation --version 11.10.0
+dotnet add package FluentValidation.DependencyInjectionExtensions --version 11.10.0
 dotnet add package Google.Cloud.Firestore --version 3.8.0
+dotnet add package Microsoft.Extensions.Logging.Abstractions
+cd ../../..
+```
+
+### Randomization Module
+```bash
+cd src/Modules/QuestionRandomizer.Modules.Randomization
+dotnet add package MediatR --version 12.4.1
+dotnet add package FluentValidation --version 11.10.0
+dotnet add package FluentValidation.DependencyInjectionExtensions --version 11.10.0
+dotnet add package Google.Cloud.Firestore --version 3.8.0
+dotnet add package Microsoft.Extensions.Logging.Abstractions
+cd ../../..
+```
+
+### Agent Module
+```bash
+cd src/Modules/QuestionRandomizer.Modules.Agent
+dotnet add package MediatR --version 12.4.1
+dotnet add package FluentValidation --version 11.10.0
+dotnet add package FluentValidation.DependencyInjectionExtensions --version 11.10.0
 dotnet add package Microsoft.Extensions.Http.Polly --version 10.0.0
 dotnet add package Polly --version 8.4.2
-dotnet add package Microsoft.AspNetCore.Http
-cd ../..
+dotnet add package Microsoft.Extensions.Logging.Abstractions
+cd ../../..
 ```
 
 ### Controllers API Project
@@ -144,7 +260,53 @@ dotnet add package Microsoft.OpenApi --version 3.0.1
 cd ../..
 ```
 
-### Unit Tests Project
+### Module Test Projects
+
+All module test projects use the same packages:
+
+```bash
+# Questions Module Tests
+cd tests/QuestionRandomizer.Modules.Questions.Tests
+dotnet add package xunit --version 2.9.2
+dotnet add package xunit.runner.visualstudio --version 2.8.2
+dotnet add package FluentAssertions --version 7.0.0
+dotnet add package Moq --version 4.20.72
+dotnet add package Bogus --version 35.6.5
+dotnet add package coverlet.collector --version 6.0.2
+cd ../..
+
+# Conversations Module Tests
+cd tests/QuestionRandomizer.Modules.Conversations.Tests
+dotnet add package xunit --version 2.9.2
+dotnet add package xunit.runner.visualstudio --version 2.8.2
+dotnet add package FluentAssertions --version 7.0.0
+dotnet add package Moq --version 4.20.72
+dotnet add package Bogus --version 35.6.5
+dotnet add package coverlet.collector --version 6.0.2
+cd ../..
+
+# Randomization Module Tests
+cd tests/QuestionRandomizer.Modules.Randomization.Tests
+dotnet add package xunit --version 2.9.2
+dotnet add package xunit.runner.visualstudio --version 2.8.2
+dotnet add package FluentAssertions --version 7.0.0
+dotnet add package Moq --version 4.20.72
+dotnet add package Bogus --version 35.6.5
+dotnet add package coverlet.collector --version 6.0.2
+cd ../..
+
+# Agent Module Tests
+cd tests/QuestionRandomizer.Modules.Agent.Tests
+dotnet add package xunit --version 2.9.2
+dotnet add package xunit.runner.visualstudio --version 2.8.2
+dotnet add package FluentAssertions --version 7.0.0
+dotnet add package Moq --version 4.20.72
+dotnet add package Bogus --version 35.6.5
+dotnet add package coverlet.collector --version 6.0.2
+cd ../..
+```
+
+### Legacy Unit Tests Project (Optional)
 ```bash
 cd tests/QuestionRandomizer.UnitTests
 dotnet add package xunit --version 2.9.2

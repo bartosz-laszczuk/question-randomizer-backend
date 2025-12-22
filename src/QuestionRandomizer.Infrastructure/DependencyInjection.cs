@@ -61,15 +61,16 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
 
-        // Register Agent Service with HttpClient and Polly retry policies
-        services.AddHttpClient<IAgentService, AgentService>(client =>
-        {
-            var baseUrl = configuration["AgentService:BaseUrl"] ?? "http://localhost:3002";
-            client.BaseAddress = new Uri(baseUrl);
-            client.Timeout = TimeSpan.FromSeconds(
-                int.Parse(configuration["AgentService:TimeoutSeconds"] ?? "60"));
-        })
-        .AddPolicyHandler(GetRetryPolicy());
+        // LEGACY: AgentService registration moved to QuestionRandomizer.Modules.Agent
+        // Remove this comment block when old Infrastructure layer is removed
+        // services.AddHttpClient<IAgentService, AgentService>(client =>
+        // {
+        //     var baseUrl = configuration["AgentService:BaseUrl"] ?? "http://localhost:3002";
+        //     client.BaseAddress = new Uri(baseUrl);
+        //     client.Timeout = TimeSpan.FromSeconds(
+        //         int.Parse(configuration["AgentService:TimeoutSeconds"] ?? "60"));
+        // })
+        // .AddPolicyHandler(GetRetryPolicy());
 
         return services;
     }

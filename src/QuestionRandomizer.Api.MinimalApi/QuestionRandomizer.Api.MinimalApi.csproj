@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\QuestionRandomizer.SharedKernel\QuestionRandomizer.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\QuestionRandomizer.Modules.Questions\QuestionRandomizer.Modules.Questions.csproj" />
+    <ProjectReference Include="..\Modules\QuestionRandomizer.Modules.Conversations\QuestionRandomizer.Modules.Conversations.csproj" />
+    <ProjectReference Include="..\Modules\QuestionRandomizer.Modules.Randomization\QuestionRandomizer.Modules.Randomization.csproj" />
+    <ProjectReference Include="..\Modules\QuestionRandomizer.Modules.Agent\QuestionRandomizer.Modules.Agent.csproj" />
     <ProjectReference Include="..\QuestionRandomizer.Application\QuestionRandomizer.Application.csproj" />
     <ProjectReference Include="..\QuestionRandomizer.Infrastructure\QuestionRandomizer.Infrastructure.csproj" />
   </ItemGroup>

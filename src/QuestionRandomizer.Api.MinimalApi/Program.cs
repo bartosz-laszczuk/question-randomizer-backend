@@ -1,6 +1,11 @@
 using QuestionRandomizer.Application;
 using QuestionRandomizer.Infrastructure;
 using QuestionRandomizer.Infrastructure.Authorization;
+using QuestionRandomizer.SharedKernel;
+using QuestionRandomizer.Modules.Questions;
+using QuestionRandomizer.Modules.Conversations;
+using QuestionRandomizer.Modules.Randomization;
+using QuestionRandomizer.Modules.Agent;
 using QuestionRandomizer.Api.MinimalApi.Endpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -23,10 +28,19 @@ if (!builder.Environment.IsEnvironment("Testing"))
 // Add built-in ProblemDetails support for Minimal APIs
 builder.Services.AddProblemDetails();
 
-// Add Application layer (MediatR, FluentValidation)
+// Add SharedKernel (cross-cutting concerns, domain events)
+builder.Services.AddSharedKernel(builder.Configuration, builder.Environment);
+
+// Add Modules (modular monolith architecture)
+builder.Services.AddQuestionsModule(builder.Configuration);
+builder.Services.AddConversationsModule(builder.Configuration);
+builder.Services.AddRandomizationModule();
+builder.Services.AddAgentModule(builder.Configuration);
+
+// Add Application layer (MediatR, FluentValidation) - LEGACY, will be removed
 builder.Services.AddApplication();
 
-// Add Infrastructure layer (Firebase, Repositories)
+// Add Infrastructure layer (Firebase, Repositories) - LEGACY, will be removed
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // Add CORS

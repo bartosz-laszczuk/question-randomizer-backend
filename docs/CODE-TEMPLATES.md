@@ -2,27 +2,370 @@
 
 This document contains all code templates and patterns used in the Question Randomizer Backend project.
 
+**Architecture:** Modular Monolith (migrated from Clean Architecture on 2025-12-22)
+**Last Updated:** 2025-12-22
+
 ---
 
 ## Table of Contents
 
-1. [Domain Entity Template](#domain-entity-template)
-2. [Repository Interface Template](#repository-interface-template)
-3. [CQRS Command Template](#cqrs-command-template)
-4. [Command Handler Template](#command-handler-template)
-5. [FluentValidation Validator Template](#fluentvalidation-validator-template)
-6. [CQRS Query Template](#cqrs-query-template)
-7. [Query Handler Template](#query-handler-template)
-8. [Controller Template](#controller-template)
-9. [Minimal API Endpoint Template](#minimal-api-endpoint-template)
-10. [Repository Implementation Template](#repository-implementation-template)
-11. [Program.cs Template](#programcs-template)
-12. [Validation Pipeline Behavior](#validation-pipeline-behavior)
-13. [Unit Test Template](#unit-test-template)
+### Modular Monolith Patterns (NEW)
+1. [Module Structure Overview](#1-module-structure-overview)
+2. [Module Extension Template](#2-module-extension-template-new)
+3. [Domain Event Template](#3-domain-event-template-new)
+4. [Event Handler Template](#4-event-handler-template-new)
+5. [Cross-Module Event Handler](#5-cross-module-event-handler-new)
+
+### Core CQRS Patterns
+6. [Domain Entity Template](#6-domain-entity-template)
+7. [Repository Interface Template](#7-repository-interface-template)
+8. [CQRS Command Template](#8-cqrs-command-template)
+9. [Command Handler Template](#9-command-handler-template)
+10. [FluentValidation Validator Template](#10-fluentvalidation-validator-template)
+11. [CQRS Query Template](#11-cqrs-query-template)
+12. [Query Handler Template](#12-query-handler-template)
+
+### API Patterns
+13. [Controller Template](#13-controller-template)
+14. [Minimal API Endpoint Template](#14-minimal-api-endpoint-template)
+
+### Infrastructure Patterns
+15. [Repository Implementation Template](#15-repository-implementation-template)
+16. [Program.cs Template (Modular)](#16-programcs-template-modular)
+17. [Validation Pipeline Behavior](#17-validation-pipeline-behavior)
+
+### Testing Patterns
+18. [Unit Test Template](#18-unit-test-template)
 
 ---
 
-## 1. Domain Entity Template
+## 1. Module Structure Overview
+
+### Modular Monolith Architecture
+
+Each module is a **vertical slice** containing all layers for a specific business capability:
+
+```
+QuestionRandomizer.Modules.<ModuleName>/
+├── Domain/                              # Entities, Value Objects
+│   ├── Entities/
+│   │   └── Question.cs
+│   └── Events/                          # Domain events published by this module
+│       └── CategoryDeletedEvent.cs
+│
+├── Application/                         # CQRS, Business Logic
+│   ├── Commands/
+│   │   └── CreateQuestion/
+│   │       ├── CreateQuestionCommand.cs
+│   │       ├── CreateQuestionCommandHandler.cs
+│   │       └── CreateQuestionCommandValidator.cs
+│   ├── Queries/
+│   │   └── GetQuestions/
+│   │       ├── GetQuestionsQuery.cs
+│   │       └── GetQuestionsQueryHandler.cs
+│   ├── DTOs/
+│   │   └── QuestionDto.cs
+│   ├── Interfaces/
+│   │   └── IQuestionRepository.cs
+│   └── EventHandlers/                   # Event handlers (own + cross-module)
+│       └── CategoryDeletedEventHandler.cs
+│
+├── Infrastructure/                      # Repositories, External Services
+│   ├── Repositories/
+│   │   └── QuestionRepository.cs
+│   └── Services/
+│       └── QuestionService.cs
+│
+└── <ModuleName>ModuleExtensions.cs      # DI registration for this module
+```
+
+**Key Principles:**
+- ✅ **Vertical Slice:** All code for a business capability lives together
+- ✅ **Module Autonomy:** Each module has its own Domain, Application, Infrastructure
+- ✅ **No Direct References:** Modules never reference each other directly
+- ✅ **Event-Driven Communication:** Use domain events for cross-module integration
+- ✅ **Self-Registration:** Each module registers its own dependencies
+
+---
+
+## 2. Module Extension Template (NEW)
+
+Each module provides a static extension method for dependency injection registration.
+
+```csharp
+// src/Modules/QuestionRandomizer.Modules.Questions/QuestionsModuleExtensions.cs
+namespace QuestionRandomizer.Modules.Questions;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using System.Reflection;
+using QuestionRandomizer.Modules.Questions.Application.Interfaces;
+using QuestionRandomizer.Modules.Questions.Infrastructure.Repositories;
+
+/// <summary>
+/// Extension methods for registering Questions module services
+/// </summary>
+public static class QuestionsModuleExtensions
+{
+    /// <summary>
+    /// Registers all services for the Questions module
+    /// </summary>
+    public static IServiceCollection AddQuestionsModule(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        // Register repositories (Infrastructure layer)
+        services.AddScoped<IQuestionRepository, QuestionRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IQualificationRepository, QualificationRepository>();
+
+        // Register MediatR handlers (auto-discovery from this assembly)
+        // This registers all IRequestHandler, INotificationHandler implementations
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+        // Register FluentValidation validators (auto-discovery)
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Optional: Register module-specific services
+        // services.AddScoped<IQuestionService, QuestionService>();
+
+        return services;
+    }
+}
+```
+
+**Usage in Program.cs:**
+```csharp
+using QuestionRandomizer.Modules.Questions;
+
+// Add Questions module
+builder.Services.AddQuestionsModule(builder.Configuration);
+```
+
+**Key Points:**
+- One extension method per module
+- Auto-discovery of handlers and validators
+- Module encapsulates all its dependencies
+- No references to other modules (except SharedKernel)
+
+---
+
+## 3. Domain Event Template (NEW)
+
+Domain events enable decoupled communication between modules.
+
+```csharp
+// src/Modules/QuestionRandomizer.Modules.Questions/Domain/Events/CategoryDeletedEvent.cs
+namespace QuestionRandomizer.Modules.Questions.Domain.Events;
+
+using QuestionRandomizer.SharedKernel.Domain;
+
+/// <summary>
+/// Domain event raised when a category is deleted
+/// Subscribed by: Randomization module (to remove category from active sessions)
+/// </summary>
+public class CategoryDeletedEvent : DomainEvent
+{
+    public CategoryDeletedEvent(string categoryId, string userId)
+    {
+        CategoryId = categoryId;
+        UserId = userId;
+    }
+
+    /// <summary>
+    /// ID of the deleted category
+    /// </summary>
+    public string CategoryId { get; }
+
+    /// <summary>
+    /// ID of the user who owns the category
+    /// </summary>
+    public string UserId { get; }
+}
+```
+
+**Base class in SharedKernel:**
+```csharp
+// src/QuestionRandomizer.SharedKernel/Domain/DomainEvent.cs
+namespace QuestionRandomizer.SharedKernel.Domain;
+
+using MediatR;
+
+/// <summary>
+/// Base class for domain events (uses MediatR INotification)
+/// </summary>
+public abstract class DomainEvent : INotification
+{
+    /// <summary>
+    /// When the event occurred
+    /// </summary>
+    public DateTime OccurredOn { get; } = DateTime.UtcNow;
+}
+```
+
+**Key Points:**
+- Inherits from `DomainEvent` (which implements `INotification`)
+- Immutable properties (init or readonly)
+- Clear XML documentation indicating subscribers
+- Published via MediatR
+
+---
+
+## 4. Event Handler Template (NEW)
+
+Event handlers within the same module (self-cleanup).
+
+```csharp
+// src/Modules/QuestionRandomizer.Modules.Questions/Application/EventHandlers/CategoryDeletedEventHandler.cs
+namespace QuestionRandomizer.Modules.Questions.Application.EventHandlers;
+
+using MediatR;
+using Microsoft.Extensions.Logging;
+using QuestionRandomizer.Modules.Questions.Domain.Events;
+using QuestionRandomizer.Modules.Questions.Application.Interfaces;
+
+/// <summary>
+/// Handles CategoryDeletedEvent within Questions module
+/// Responsible for cleaning up questions that reference the deleted category
+/// </summary>
+public class CategoryDeletedEventHandler : INotificationHandler<CategoryDeletedEvent>
+{
+    private readonly IQuestionRepository _questionRepository;
+    private readonly ILogger<CategoryDeletedEventHandler> _logger;
+
+    public CategoryDeletedEventHandler(
+        IQuestionRepository questionRepository,
+        ILogger<CategoryDeletedEventHandler> logger)
+    {
+        _questionRepository = questionRepository;
+        _logger = logger;
+    }
+
+    public async Task Handle(CategoryDeletedEvent notification, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Handling CategoryDeleted event in Questions module for categoryId: {CategoryId}, userId: {UserId}",
+            notification.CategoryId,
+            notification.UserId);
+
+        // Remove category reference from all questions
+        var questions = await _questionRepository.GetByCategoryIdAsync(
+            notification.CategoryId,
+            notification.UserId,
+            cancellationToken);
+
+        foreach (var question in questions)
+        {
+            question.CategoryId = null;
+            question.CategoryName = null;
+            await _questionRepository.UpdateAsync(question, cancellationToken);
+        }
+
+        _logger.LogInformation(
+            "Updated {Count} questions to remove category reference",
+            questions.Count);
+    }
+}
+```
+
+**Key Points:**
+- Implement `INotificationHandler<TEvent>`
+- Multiple handlers can subscribe to the same event
+- Use logging for observability
+- Handle errors gracefully (don't throw unless critical)
+
+---
+
+## 5. Cross-Module Event Handler (NEW)
+
+Event handlers in a different module (cross-module communication).
+
+```csharp
+// src/Modules/QuestionRandomizer.Modules.Randomization/Application/EventHandlers/CategoryDeletedEventHandler.cs
+namespace QuestionRandomizer.Modules.Randomization.Application.EventHandlers;
+
+using MediatR;
+using Microsoft.Extensions.Logging;
+using QuestionRandomizer.Modules.Questions.Domain.Events; // 🔥 References event from Questions module
+using QuestionRandomizer.Modules.Randomization.Application.Interfaces;
+
+/// <summary>
+/// Handles CategoryDeletedEvent from Questions module
+/// Responsible for removing the deleted category from all active randomization sessions
+/// This demonstrates CROSS-MODULE COMMUNICATION via domain events
+/// </summary>
+public class CategoryDeletedEventHandler : INotificationHandler<CategoryDeletedEvent>
+{
+    private readonly IRandomizationRepository _randomizationRepository;
+    private readonly ISelectedCategoryRepository _selectedCategoryRepository;
+    private readonly ILogger<CategoryDeletedEventHandler> _logger;
+
+    public CategoryDeletedEventHandler(
+        IRandomizationRepository randomizationRepository,
+        ISelectedCategoryRepository selectedCategoryRepository,
+        ILogger<CategoryDeletedEventHandler> logger)
+    {
+        _randomizationRepository = randomizationRepository;
+        _selectedCategoryRepository = selectedCategoryRepository;
+        _logger = logger;
+    }
+
+    public async Task Handle(CategoryDeletedEvent notification, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Handling CategoryDeleted event in Randomization module for categoryId: {CategoryId}, userId: {UserId}",
+            notification.CategoryId,
+            notification.UserId);
+
+        // Get all active randomization sessions for this user
+        var activeRandomizations = await _randomizationRepository
+            .GetActiveByUserIdAsync(notification.UserId, cancellationToken);
+
+        // Remove the deleted category from all active sessions
+        foreach (var randomization in activeRandomizations)
+        {
+            await _selectedCategoryRepository.DeleteAsync(
+                randomization.Id,
+                notification.CategoryId,
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Removed category {CategoryId} from randomization session {RandomizationId}",
+                notification.CategoryId,
+                randomization.Id);
+        }
+    }
+}
+```
+
+**Key Points:**
+- ✅ **Decoupled:** Randomization module reacts to Questions module events
+- ✅ **No Direct Reference:** Only references the event class (not the entire module)
+- ✅ **Autonomous:** Each module handles the event independently
+- ✅ **Scalable:** Easy to add more subscribers without modifying the publisher
+
+**Publishing Domain Events:**
+```csharp
+// In DeleteCategoryCommandHandler (Questions module)
+public async Task Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
+{
+    var userId = _currentUserService.GetUserId();
+
+    // Delete the category
+    await _categoryRepository.DeleteAsync(request.Id, userId, cancellationToken);
+
+    // Publish domain event (MediatR will notify all subscribers)
+    await _mediator.Publish(
+        new CategoryDeletedEvent(request.Id, userId),
+        cancellationToken);
+}
+```
+
+---
+
+## 6. Domain Entity Template
 
 ```csharp
 // src/QuestionRandomizer.Domain/Entities/Question.cs
@@ -785,12 +1128,15 @@ public class QuestionRepository : IQuestionRepository
 
 ---
 
-## 11. Program.cs Template
+## 16. Program.cs Template (Modular)
 
 ```csharp
 // src/QuestionRandomizer.Api.Controllers/Program.cs
-using QuestionRandomizer.Application;
-using QuestionRandomizer.Infrastructure;
+using QuestionRandomizer.SharedKernel;
+using QuestionRandomizer.Modules.Questions;
+using QuestionRandomizer.Modules.Conversations;
+using QuestionRandomizer.Modules.Randomization;
+using QuestionRandomizer.Modules.Agent;
 using Hellang.Middleware.ProblemDetails;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -808,11 +1154,18 @@ builder.Services.AddProblemDetails(options =>
     options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
 });
 
-// Application layer (MediatR, FluentValidation)
-builder.Services.AddApplication();
+// Add SharedKernel (cross-cutting concerns, domain events infrastructure)
+builder.Services.AddSharedKernel(builder.Configuration, builder.Environment);
 
-// Infrastructure layer (Firebase, Repositories)
-builder.Services.AddInfrastructure(builder.Configuration);
+// Add Modules (modular monolith architecture)
+builder.Services.AddQuestionsModule(builder.Configuration);
+builder.Services.AddConversationsModule(builder.Configuration);
+builder.Services.AddRandomizationModule();
+builder.Services.AddAgentModule(builder.Configuration);
+
+// LEGACY - Old Clean Architecture layers (to be removed later)
+// builder.Services.AddApplication();
+// builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // CORS
 builder.Services.AddCors(options =>
@@ -862,11 +1215,18 @@ public partial class Program { }
 ```
 
 **Key Points:**
-- Minimal configuration in Program.cs
-- Layer-specific DI registration via extension methods
+- ✅ **Modular Registration:** Each module registers its own dependencies
+- ✅ **SharedKernel First:** Cross-cutting concerns and domain events infrastructure
+- ✅ **Clean Separation:** Each module is self-contained
+- ✅ **No Module References:** Modules don't know about each other (only SharedKernel)
 - ProblemDetails for consistent error handling
 - OpenTelemetry for observability
 - Health checks endpoint
+
+**Module Registration Order:**
+1. SharedKernel (must be first - provides domain events infrastructure)
+2. Business Modules (Questions, Conversations, Randomization, Agent)
+3. Infrastructure concerns (CORS, OpenTelemetry, etc.)
 
 ---
 
@@ -1058,10 +1418,29 @@ public class CreateQuestionCommandHandlerTests
 These templates provide the foundation for the Question Randomizer Backend project. Follow these patterns consistently to maintain code quality and architectural integrity.
 
 **Key Principles:**
-- ✅ Clean Architecture (Domain → Application → Infrastructure → API)
-- ✅ CQRS with MediatR
-- ✅ Repository Pattern
-- ✅ Dependency Injection
-- ✅ Async/await throughout
-- ✅ XML documentation
-- ✅ Comprehensive testing
+
+### Architecture
+- ✅ **Modular Monolith** (vertical slices by business capability)
+- ✅ **Module Autonomy** (each module: Domain → Application → Infrastructure)
+- ✅ **Event-Driven Communication** (domain events for cross-module integration)
+- ✅ **SharedKernel** (cross-cutting concerns, domain events infrastructure)
+
+### Patterns
+- ✅ **CQRS with MediatR** (Commands, Queries, Domain Events)
+- ✅ **Repository Pattern** (abstraction over Firestore)
+- ✅ **Dependency Injection** (module self-registration)
+- ✅ **FluentValidation** (input validation pipeline)
+
+### Coding Standards
+- ✅ **Async/await throughout** (all I/O operations)
+- ✅ **XML documentation** (all public types and members)
+- ✅ **Comprehensive testing** (unit, integration, E2E)
+- ✅ **Immutability** (records for commands/queries/events)
+
+### Module Guidelines
+- ✅ **No Direct Module References** (only via domain events)
+- ✅ **Clear Boundaries** (module folders enforce separation)
+- ✅ **Self-Contained** (module includes all layers)
+- ✅ **Observable** (logging in event handlers)
+
+**For complete migration details, architecture comparison, and module statistics, see [MIGRATION-SUMMARY.md](../MIGRATION-SUMMARY.md).**

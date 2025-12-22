@@ -2,15 +2,16 @@
 
 **Project:** Question Randomizer Backend API (Dual Implementation)
 **Technology:** .NET 10 (C#)
-**Architecture:** Clean Architecture + CQRS + MediatR
+**Architecture:** Modular Monolith (migrated from Clean Architecture) + CQRS + MediatR
 **Database:** Firebase Firestore
 **Authentication:** Firebase Authentication
-**Last Updated:** 2025-12-03
+**Last Updated:** 2025-12-22
 
 ---
 
 ## 📚 Documentation Index
 
+- **[MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md)** - 🆕 Complete Modular Monolith migration summary
 - **[CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md)** - All code templates and patterns
 - **[SETUP-GUIDE.md](./docs/SETUP-GUIDE.md)** - Complete step-by-step setup instructions
 - **[CONFIGURATION.md](./docs/CONFIGURATION.md)** - Configuration details and examples
@@ -55,40 +56,82 @@ This backend is part of a 3-service architecture:
 
 ## Architecture Decisions
 
+### 🏗️ Modular Monolith Architecture (Current)
+**Migration Date:** 2025-12-22
+**Decision:** Migrated from Clean Architecture (horizontal layers) to Modular Monolith (vertical slices)
+
+**Current Structure:**
+```
+┌─────────────┬─────────────────┬──────────────────┬────────────┐
+│  Questions  │ Conversations   │  Randomization   │   Agent    │
+│   Module    │     Module      │     Module       │   Module   │
+├─────────────┼─────────────────┼──────────────────┼────────────┤
+│ Application │  Application    │   Application    │ Application│
+│Infrastructure│ Infrastructure │  Infrastructure  │Infrastructure│
+│   Domain    │    Domain       │     Domain       │   Domain   │
+└─────────────┴─────────────────┴──────────────────┴────────────┘
+              ▲                          ▲
+              └──── Domain Events ───────┘
+                 (CategoryDeletedEvent)
+
+         Shared Kernel (Cross-Cutting Concerns)
+```
+
+**Modules:**
+- **Questions Module** (36 files) - Question, Category, Qualification management
+- **Conversations Module** (28 files) - Conversation and message management
+- **Randomization Module** (42 files) - Question randomization, session management
+- **Agent Module** (4 files) - AI agent task execution integration
+
+**Rationale:**
+- **Learning Purpose:** Demonstrate modular monolith architecture
+- **Vertical Slicing:** Organize code by business capability (not technical layer)
+- **Autonomy:** Each module can evolve independently
+- **Cross-Module Communication:** Domain events pattern for decoupled integration
+- **Real Example:** CategoryDeletedEvent published by Questions, subscribed by Randomization
+
+**📖 See [MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md) for complete migration details, architecture comparison, and code statistics.**
+
 ### Dual API Implementation 🎓
 **Decision:** Implement BOTH Controllers and Minimal APIs side-by-side
 
 **Implementation:**
 - `QuestionRandomizer.Api.Controllers` (Port 5000) - Traditional Controllers approach
 - `QuestionRandomizer.Api.MinimalApi` (Port 5001) - Modern Minimal API approach
-- **Same Domain, Application, and Infrastructure layers** - Perfect demonstration of Clean Architecture
+- **Both APIs work with modular monolith architecture** - Perfect demonstration of architecture flexibility
 
 **Rationale:**
 - Learning Purpose: Compare both approaches in production-quality code
-- Clean Architecture Demonstration: Show how presentation layer can be swapped
+- Architecture Demonstration: Show how presentation layer is independent of business architecture
 - Performance Comparison: Benchmark real-world performance differences
 - Team Training: Developers can learn both patterns with identical functionality
 
 **📖 See [DUAL-API-GUIDE.md](./docs/DUAL-API-GUIDE.md) for detailed comparison and when to use each approach.**
 
-### Why Clean Architecture?
-**Structure:**
-```
-Domain ← Application ← Infrastructure
-                ↑
-               API
-```
-
+### Why Modular Monolith?
 **Benefits:**
-- Clear separation of concerns
-- Dependency inversion (dependencies point inward)
-- Highly testable (business logic isolated from infrastructure)
-- Technology-agnostic domain layer
+- **Vertical Slicing:** All code for a business capability lives together
+- **Module Autonomy:** Each module has its own Domain, Application, Infrastructure
+- **Decoupled Communication:** Modules interact via domain events (no direct references)
+- **Flexibility:** Easy to extract a module into a microservice later if needed
+- **Clarity:** Business capabilities are explicit in folder structure
+
+**Comparison with Clean Architecture:**
+| Aspect | Clean Architecture | Modular Monolith |
+|--------|-------------------|------------------|
+| Organization | Horizontal layers | Vertical slices |
+| Coupling | Layer dependencies | Event-driven communication |
+| Cohesion | Technical grouping | Business capability grouping |
+| Scalability | Extract by layer | Extract by module |
 
 ### Why CQRS with MediatR?
 **Pattern:**
 ```
 Controller → MediatR → Command/Query Handler → Repository → Firestore
+                ↓
+          Domain Events (INotification)
+                ↓
+        Cross-Module Event Handlers
 ```
 
 **Benefits:**
@@ -96,6 +139,7 @@ Controller → MediatR → Command/Query Handler → Repository → Firestore
 - Easy to test handlers in isolation
 - Decouples controllers from business logic
 - Supports cross-cutting concerns (logging, validation)
+- **Enables domain events** for cross-module communication
 
 ---
 
@@ -121,11 +165,12 @@ Controller → MediatR → Command/Query Handler → Repository → Firestore
 
 ## Project Structure
 
-### Solution Structure (Dual API Implementation)
+### Solution Structure (Modular Monolith + Dual API)
 ```
 question-randomizer-backend/
-├── QuestionRandomizer.sln                              # Solution file (8 projects)
+├── QuestionRandomizer.slnx                             # Solution file (18 projects)
 ├── CLAUDE.md                                           # This file - developer guide
+├── MIGRATION-SUMMARY.md                                # 🆕 Modular Monolith migration details
 ├── docs/                                               # Detailed documentation
 │   ├── CODE-TEMPLATES.md
 │   ├── SETUP-GUIDE.md
@@ -134,23 +179,64 @@ question-randomizer-backend/
 │   └── TESTING.md
 │
 ├── src/
-│   ├── QuestionRandomizer.Domain/                     # 🏛️ Domain Layer (Entities, Interfaces)
-│   ├── QuestionRandomizer.Application/                # 💼 Application Layer (CQRS, Business Logic)
-│   ├── QuestionRandomizer.Infrastructure/             # 🔧 Infrastructure Layer (Firebase, External Services)
+│   ├── QuestionRandomizer.SharedKernel/               # 🔗 Shared Kernel (Domain Events, Common Interfaces)
+│   │
+│   ├── Modules/                                       # 📦 Business Modules (Vertical Slices)
+│   │   ├── QuestionRandomizer.Modules.Questions/      # Questions, Categories, Qualifications (36 files)
+│   │   │   ├── Domain/                               # Entities (Question, Category, Qualification)
+│   │   │   ├── Application/                          # Commands, Queries, DTOs, EventHandlers
+│   │   │   ├── Infrastructure/                       # Repositories (Firestore)
+│   │   │   └── QuestionsModuleExtensions.cs         # DI Registration
+│   │   │
+│   │   ├── QuestionRandomizer.Modules.Conversations/  # Conversations & Messages (28 files)
+│   │   │   ├── Domain/
+│   │   │   ├── Application/
+│   │   │   ├── Infrastructure/
+│   │   │   └── ConversationsModuleExtensions.cs
+│   │   │
+│   │   ├── QuestionRandomizer.Modules.Randomization/  # Randomization Logic (42 files)
+│   │   │   ├── Domain/
+│   │   │   ├── Application/
+│   │   │   │   └── EventHandlers/                    # CategoryDeletedEventHandler (cross-module)
+│   │   │   ├── Infrastructure/
+│   │   │   └── RandomizationModuleExtensions.cs
+│   │   │
+│   │   └── QuestionRandomizer.Modules.Agent/         # AI Agent Integration (4 files)
+│   │       ├── Application/
+│   │       │   ├── DTOs/
+│   │       │   └── Interfaces/
+│   │       ├── Infrastructure/
+│   │       │   └── Services/
+│   │       └── AgentModuleExtensions.cs
+│   │
 │   ├── QuestionRandomizer.Api.Controllers/            # 🎯 Controllers API (Port 5000)
-│   └── QuestionRandomizer.Api.MinimalApi/             # 🚀 Minimal API (Port 5001)
+│   ├── QuestionRandomizer.Api.MinimalApi/             # 🚀 Minimal API (Port 5001)
+│   │
+│   └── LEGACY (to be removed):                        # ⚠️ Old Clean Architecture layers
+│       ├── QuestionRandomizer.Domain/
+│       ├── QuestionRandomizer.Application/
+│       └── QuestionRandomizer.Infrastructure/
 │
 └── tests/
-    ├── QuestionRandomizer.UnitTests/                  # 🧪 Unit Tests
-    ├── QuestionRandomizer.IntegrationTests.Controllers/ # 🔗 Integration Tests
-    └── QuestionRandomizer.E2ETests/                   # 🎭 End-to-End Tests
+    ├── QuestionRandomizer.Modules.Questions.Tests/    # 🆕 Questions module tests
+    ├── QuestionRandomizer.Modules.Conversations.Tests/# 🆕 Conversations module tests
+    ├── QuestionRandomizer.Modules.Randomization.Tests/# 🆕 Randomization module tests
+    ├── QuestionRandomizer.Modules.Agent.Tests/        # 🆕 Agent module tests
+    │
+    ├── QuestionRandomizer.UnitTests/                  # Legacy unit tests
+    ├── QuestionRandomizer.IntegrationTests.Controllers/# Integration tests (Controllers API)
+    ├── QuestionRandomizer.IntegrationTests.MinimalApi/# Integration tests (Minimal API)
+    └── QuestionRandomizer.E2ETests/                   # End-to-End tests
 ```
 
 **Key Points:**
-- **Two complete API implementations** running side-by-side
-- **Same business logic** - Domain, Application, Infrastructure shared
-- **Different ports** - 5000 (Controllers), 5001 (Minimal API)
-- **Perfect learning tool** - Compare approaches with identical functionality
+- **4 Business Modules:** Questions, Conversations, Randomization, Agent
+- **Vertical Slices:** Each module contains Domain, Application, Infrastructure
+- **Cross-Module Communication:** Domain events (e.g., CategoryDeletedEvent)
+- **SharedKernel:** Domain events infrastructure, common interfaces, base entities
+- **Two complete API implementations** running side-by-side (both work with modular architecture)
+- **18 Projects Total:** 5 modules + 2 APIs + 3 legacy + 8 test projects
+- **140 migrated files** across all modules
 
 ---
 
@@ -447,8 +533,9 @@ curl http://localhost:5001/api/questions  # Minimal API
 ### For New Developers
 
 1. **Understand the Architecture**
-   - Review the "Architecture Decisions" section above (Clean Architecture, CQRS, Dual API)
-   - Examine the "Project Structure" to understand the solution layout
+   - **NEW:** Read [MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md) to understand the Modular Monolith architecture
+   - Review the "Architecture Decisions" section above (Modular Monolith, CQRS, Dual API)
+   - Examine the "Project Structure" to understand the modular solution layout
    - Read [DUAL-API-GUIDE.md](./docs/DUAL-API-GUIDE.md) for Controllers vs Minimal API comparison
 
 2. **Set Up Your Environment**
@@ -457,8 +544,10 @@ curl http://localhost:5001/api/questions  # Minimal API
    - Run `dotnet build` to verify everything works
 
 3. **Explore the Codebase**
+   - **Start with a module:** Pick QuestionRandomizer.Modules.Questions as your entry point
    - Review [CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md) to understand code patterns
-   - Start with Domain layer → Application layer → Infrastructure layer
+   - Explore module structure: Domain → Application → Infrastructure
+   - Understand cross-module communication via domain events (see CategoryDeletedEvent example)
    - Examine both API implementations side-by-side
 
 4. **Run and Test**
@@ -469,7 +558,9 @@ curl http://localhost:5001/api/questions  # Minimal API
 
 5. **Making Changes**
    - Follow established code patterns (see CODE-TEMPLATES.md)
-   - Write tests for new features
+   - Add new features within the appropriate module (Questions, Conversations, Randomization, or Agent)
+   - Use domain events for cross-module communication (never direct module-to-module references)
+   - Write tests for new features (both module tests and integration tests)
    - Update both API implementations if adding new endpoints
    - Review [TESTING.md](./docs/TESTING.md) for testing guidelines
 
@@ -478,6 +569,7 @@ curl http://localhost:5001/api/questions  # Minimal API
 ## Additional Resources
 
 ### Documentation
+- **[MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md)** - 🆕 Complete Modular Monolith migration summary with architecture comparison
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide for Docker, Azure, AWS, Kubernetes
 - **[SECURITY-AUDIT.md](./docs/SECURITY-AUDIT.md)** - Security checklist and best practices
 - **[INTEGRATION-TEST-SUMMARY.md](./INTEGRATION-TEST-SUMMARY.md)** - Detailed test results and coverage

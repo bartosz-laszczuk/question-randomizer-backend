@@ -34,7 +34,11 @@
       "Bash(Select-String -Pattern \"Total tests|Passed|Failed|test result\")",
       "Bash(find:*)",
       "Bash(dotnet restore:*)",
-      "Bash(timeout 15 dotnet run:*)"
+      "Bash(timeout 15 dotnet run:*)",
+      "Bash(for dir in Categories Conversations Messages PostponedQuestions Qualifications Questions Randomizations SelectedCategories UsedQuestions)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
