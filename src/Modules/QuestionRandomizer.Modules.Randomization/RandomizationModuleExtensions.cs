@@ -1,9 +1,9 @@
+using System.Reflection;
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using QuestionRandomizer.Modules.Randomization.Application.EventHandlers;
 using QuestionRandomizer.Modules.Randomization.Domain.Interfaces;
 using QuestionRandomizer.Modules.Randomization.Infrastructure.Repositories;
-using QuestionRandomizer.Modules.Questions.Domain.Events;
 
 namespace QuestionRandomizer.Modules.Randomization;
 
@@ -26,8 +26,14 @@ public static class RandomizationModuleExtensions
         services.AddScoped<IUsedQuestionRepository, UsedQuestionRepository>();
         services.AddScoped<IPostponedQuestionRepository, PostponedQuestionRepository>();
 
-        // Register event handler - subscribes to CategoryDeletedEvent from Questions module
-        services.AddScoped<INotificationHandler<CategoryDeletedEvent>, CategoryDeletedEventHandler>();
+        // Register MediatR handlers and event handlers from this assembly
+        // This will auto-discover all IRequestHandler<,> and INotificationHandler<> implementations
+        // including CategoryDeletedEventHandler (cross-module event subscription)
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+        // Register validators from this assembly (if any exist in the future)
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         return services;
     }

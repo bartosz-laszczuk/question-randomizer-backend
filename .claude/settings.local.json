@@ -41,7 +41,8 @@
       "Bash(mkdir:*)",
       "Bash(done)",
       "Bash(grep:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(timeout 10 dotnet test:*)"
     ],
     "deny": [],
     "ask": []
