@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using QuestionRandomizer.Application.Interfaces;
+using QuestionRandomizer.SharedKernel.Application.Interfaces;
 
 /// <summary>
 /// Custom WebApplicationFactory for E2E tests

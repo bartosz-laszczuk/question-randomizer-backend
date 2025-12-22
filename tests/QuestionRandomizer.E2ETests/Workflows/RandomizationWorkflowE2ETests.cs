@@ -3,7 +3,8 @@ namespace QuestionRandomizer.E2ETests.Workflows;
 using System.Net;
 using Bogus;
 using FluentAssertions;
-using QuestionRandomizer.Application.DTOs;
+using QuestionRandomizer.Modules.Randomization.Application.DTOs;
+using QuestionRandomizer.Modules.Questions.Application.DTOs;
 using QuestionRandomizer.E2ETests.Infrastructure;
 
 /// <summary>

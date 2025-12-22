@@ -3,8 +3,9 @@ namespace QuestionRandomizer.Api.Controllers.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Interfaces;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.Modules.Agent.Application.Interfaces;
+using QuestionRandomizer.Modules.Agent.Application.DTOs;
 using System.Threading;
 using System.Threading.Tasks;
 

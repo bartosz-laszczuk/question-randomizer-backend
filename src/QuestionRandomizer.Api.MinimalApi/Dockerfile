@@ -3,10 +3,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution and project files
-COPY ["QuestionRandomizer.sln", "./"]
-COPY ["src/QuestionRandomizer.Domain/QuestionRandomizer.Domain.csproj", "src/QuestionRandomizer.Domain/"]
-COPY ["src/QuestionRandomizer.Application/QuestionRandomizer.Application.csproj", "src/QuestionRandomizer.Application/"]
-COPY ["src/QuestionRandomizer.Infrastructure/QuestionRandomizer.Infrastructure.csproj", "src/QuestionRandomizer.Infrastructure/"]
+COPY ["QuestionRandomizer.slnx", "./"]
+COPY ["src/QuestionRandomizer.SharedKernel/QuestionRandomizer.SharedKernel.csproj", "src/QuestionRandomizer.SharedKernel/"]
+COPY ["src/Modules/QuestionRandomizer.Modules.Questions/QuestionRandomizer.Modules.Questions.csproj", "src/Modules/QuestionRandomizer.Modules.Questions/"]
+COPY ["src/Modules/QuestionRandomizer.Modules.Conversations/QuestionRandomizer.Modules.Conversations.csproj", "src/Modules/QuestionRandomizer.Modules.Conversations/"]
+COPY ["src/Modules/QuestionRandomizer.Modules.Randomization/QuestionRandomizer.Modules.Randomization.csproj", "src/Modules/QuestionRandomizer.Modules.Randomization/"]
+COPY ["src/Modules/QuestionRandomizer.Modules.Agent/QuestionRandomizer.Modules.Agent.csproj", "src/Modules/QuestionRandomizer.Modules.Agent/"]
 COPY ["src/QuestionRandomizer.Api.MinimalApi/QuestionRandomizer.Api.MinimalApi.csproj", "src/QuestionRandomizer.Api.MinimalApi/"]
 
 # Restore dependencies

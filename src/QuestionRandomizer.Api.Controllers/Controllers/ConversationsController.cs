@@ -3,15 +3,15 @@ namespace QuestionRandomizer.Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Commands.Conversations.CreateConversation;
-using QuestionRandomizer.Application.Commands.Conversations.UpdateConversationTimestamp;
-using QuestionRandomizer.Application.Commands.Conversations.DeleteConversation;
-using QuestionRandomizer.Application.Commands.Messages.AddMessage;
-using QuestionRandomizer.Application.Queries.Conversations.GetConversations;
-using QuestionRandomizer.Application.Queries.Conversations.GetConversationById;
-using QuestionRandomizer.Application.Queries.Messages.GetMessages;
-using QuestionRandomizer.Application.DTOs;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.Modules.Conversations.Application.Commands.Conversations.CreateConversation;
+using QuestionRandomizer.Modules.Conversations.Application.Commands.Conversations.UpdateConversationTimestamp;
+using QuestionRandomizer.Modules.Conversations.Application.Commands.Conversations.DeleteConversation;
+using QuestionRandomizer.Modules.Conversations.Application.Commands.Messages.AddMessage;
+using QuestionRandomizer.Modules.Conversations.Application.Queries.Conversations.GetConversations;
+using QuestionRandomizer.Modules.Conversations.Application.Queries.Conversations.GetConversationById;
+using QuestionRandomizer.Modules.Conversations.Application.Queries.Messages.GetMessages;
+using QuestionRandomizer.Modules.Conversations.Application.DTOs;
 
 /// <summary>
 /// Manages AI chat conversations and messages

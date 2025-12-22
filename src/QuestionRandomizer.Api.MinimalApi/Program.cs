@@ -1,7 +1,5 @@
-using QuestionRandomizer.Application;
-using QuestionRandomizer.Infrastructure;
-using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.SharedKernel;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
 using QuestionRandomizer.Modules.Questions;
 using QuestionRandomizer.Modules.Conversations;
 using QuestionRandomizer.Modules.Randomization;
@@ -36,12 +34,6 @@ builder.Services.AddQuestionsModule(builder.Configuration);
 builder.Services.AddConversationsModule(builder.Configuration);
 builder.Services.AddRandomizationModule();
 builder.Services.AddAgentModule(builder.Configuration);
-
-// Add Application layer (MediatR, FluentValidation) - LEGACY, will be removed
-builder.Services.AddApplication();
-
-// Add Infrastructure layer (Firebase, Repositories) - LEGACY, will be removed
-builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // Add CORS
 builder.Services.AddCors(options =>

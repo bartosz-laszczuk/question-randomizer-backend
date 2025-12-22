@@ -3,14 +3,14 @@ namespace QuestionRandomizer.Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Commands.Qualifications.CreateQualification;
-using QuestionRandomizer.Application.Commands.Qualifications.UpdateQualification;
-using QuestionRandomizer.Application.Commands.Qualifications.DeleteQualification;
-using QuestionRandomizer.Application.Commands.Qualifications.CreateQualificationsBatch;
-using QuestionRandomizer.Application.Queries.Qualifications.GetQualifications;
-using QuestionRandomizer.Application.Queries.Qualifications.GetQualificationById;
-using QuestionRandomizer.Application.DTOs;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Qualifications.CreateQualification;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Qualifications.UpdateQualification;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Qualifications.DeleteQualification;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Qualifications.CreateQualificationsBatch;
+using QuestionRandomizer.Modules.Questions.Application.Queries.Qualifications.GetQualifications;
+using QuestionRandomizer.Modules.Questions.Application.Queries.Qualifications.GetQualificationById;
+using QuestionRandomizer.Modules.Questions.Application.DTOs;
 
 /// <summary>
 /// Manages job qualifications

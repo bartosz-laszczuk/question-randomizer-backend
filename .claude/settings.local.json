@@ -38,7 +38,10 @@
       "Bash(for dir in Categories Conversations Messages PostponedQuestions Qualifications Questions Randomizations SelectedCategories UsedQuestions)",
       "Bash(ls:*)",
       "Bash(tree:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(done)",
+      "Bash(grep:*)",
+      "Bash(xargs sed:*)"
     ],
     "deny": [],
     "ask": []

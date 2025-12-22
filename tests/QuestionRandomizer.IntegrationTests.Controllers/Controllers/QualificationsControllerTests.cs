@@ -4,10 +4,10 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Moq;
-using QuestionRandomizer.Application.Commands.Qualifications.CreateQualification;
-using QuestionRandomizer.Application.Commands.Qualifications.CreateQualificationsBatch;
-using QuestionRandomizer.Application.DTOs;
-using QuestionRandomizer.Domain.Entities;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Qualifications.CreateQualification;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Qualifications.CreateQualificationsBatch;
+using QuestionRandomizer.Modules.Questions.Application.DTOs;
+using QuestionRandomizer.Modules.Questions.Domain.Entities;
 using QuestionRandomizer.IntegrationTests.Controllers.Infrastructure;
 
 /// <summary>

@@ -2,9 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/QuestionRandomizer.Api.Controllers/QuestionRandomizer.Api.Controllers.csproj" />
     <Project Path="src/QuestionRandomizer.Api.MinimalApi/QuestionRandomizer.Api.MinimalApi.csproj" />
-    <Project Path="src/QuestionRandomizer.Application/QuestionRandomizer.Application.csproj" />
-    <Project Path="src/QuestionRandomizer.Domain/QuestionRandomizer.Domain.csproj" />
-    <Project Path="src/QuestionRandomizer.Infrastructure/QuestionRandomizer.Infrastructure.csproj" />
     <Project Path="src/QuestionRandomizer.SharedKernel/QuestionRandomizer.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Modules/">
@@ -21,6 +18,5 @@
     <Project Path="tests/QuestionRandomizer.Modules.Conversations.Tests/QuestionRandomizer.Modules.Conversations.Tests.csproj" />
     <Project Path="tests/QuestionRandomizer.Modules.Questions.Tests/QuestionRandomizer.Modules.Questions.Tests.csproj" />
     <Project Path="tests/QuestionRandomizer.Modules.Randomization.Tests/QuestionRandomizer.Modules.Randomization.Tests.csproj" />
-    <Project Path="tests/QuestionRandomizer.UnitTests/QuestionRandomizer.UnitTests.csproj" />
   </Folder>
 </Solution>

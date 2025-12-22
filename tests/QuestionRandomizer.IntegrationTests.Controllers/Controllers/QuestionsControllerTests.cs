@@ -4,9 +4,9 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Moq;
-using QuestionRandomizer.Application.Commands.Questions.CreateQuestion;
-using QuestionRandomizer.Application.DTOs;
-using QuestionRandomizer.Domain.Entities;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.CreateQuestion;
+using QuestionRandomizer.Modules.Questions.Application.DTOs;
+using QuestionRandomizer.Modules.Questions.Domain.Entities;
 using QuestionRandomizer.IntegrationTests.Controllers.Infrastructure;
 
 /// <summary>

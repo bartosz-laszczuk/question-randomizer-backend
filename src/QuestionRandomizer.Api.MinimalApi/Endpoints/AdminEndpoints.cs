@@ -1,8 +1,8 @@
 namespace QuestionRandomizer.Api.MinimalApi.Endpoints;
 
 using Microsoft.AspNetCore.Http.HttpResults;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Interfaces;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.SharedKernel.Application.Interfaces;
 
 /// <summary>
 /// Admin-only Minimal API endpoints for system management

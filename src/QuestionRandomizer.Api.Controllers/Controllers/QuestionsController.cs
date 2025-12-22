@@ -3,17 +3,17 @@ namespace QuestionRandomizer.Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Commands.Questions.CreateQuestion;
-using QuestionRandomizer.Application.Commands.Questions.UpdateQuestion;
-using QuestionRandomizer.Application.Commands.Questions.DeleteQuestion;
-using QuestionRandomizer.Application.Commands.Questions.CreateQuestionsBatch;
-using QuestionRandomizer.Application.Commands.Questions.UpdateQuestionsBatch;
-using QuestionRandomizer.Application.Commands.Questions.RemoveCategoryFromQuestions;
-using QuestionRandomizer.Application.Commands.Questions.RemoveQualificationFromQuestions;
-using QuestionRandomizer.Application.Queries.Questions.GetQuestions;
-using QuestionRandomizer.Application.Queries.Questions.GetQuestionById;
-using QuestionRandomizer.Application.DTOs;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.CreateQuestion;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.UpdateQuestion;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.DeleteQuestion;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.CreateQuestionsBatch;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.UpdateQuestionsBatch;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.RemoveCategoryFromQuestions;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Questions.RemoveQualificationFromQuestions;
+using QuestionRandomizer.Modules.Questions.Application.Queries.Questions.GetQuestions;
+using QuestionRandomizer.Modules.Questions.Application.Queries.Questions.GetQuestionById;
+using QuestionRandomizer.Modules.Questions.Application.DTOs;
 
 /// <summary>
 /// Manages interview questions

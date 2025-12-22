@@ -3,14 +3,14 @@ namespace QuestionRandomizer.Api.Controllers.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Commands.Categories.CreateCategory;
-using QuestionRandomizer.Application.Commands.Categories.CreateCategoriesBatch;
-using QuestionRandomizer.Application.Commands.Categories.UpdateCategory;
-using QuestionRandomizer.Application.Commands.Categories.DeleteCategory;
-using QuestionRandomizer.Application.Queries.Categories.GetCategories;
-using QuestionRandomizer.Application.Queries.Categories.GetCategoryById;
-using QuestionRandomizer.Application.DTOs;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Categories.CreateCategory;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Categories.CreateCategoriesBatch;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Categories.UpdateCategory;
+using QuestionRandomizer.Modules.Questions.Application.Commands.Categories.DeleteCategory;
+using QuestionRandomizer.Modules.Questions.Application.Queries.Categories.GetCategories;
+using QuestionRandomizer.Modules.Questions.Application.Queries.Categories.GetCategoryById;
+using QuestionRandomizer.Modules.Questions.Application.DTOs;
 
 /// <summary>
 /// Manages question categories

@@ -210,20 +210,13 @@ question-randomizer-backend/
 │   │       └── AgentModuleExtensions.cs
 │   │
 │   ├── QuestionRandomizer.Api.Controllers/            # 🎯 Controllers API (Port 5000)
-│   ├── QuestionRandomizer.Api.MinimalApi/             # 🚀 Minimal API (Port 5001)
-│   │
-│   └── LEGACY (to be removed):                        # ⚠️ Old Clean Architecture layers
-│       ├── QuestionRandomizer.Domain/
-│       ├── QuestionRandomizer.Application/
-│       └── QuestionRandomizer.Infrastructure/
+│   └── QuestionRandomizer.Api.MinimalApi/             # 🚀 Minimal API (Port 5001)
 │
 └── tests/
-    ├── QuestionRandomizer.Modules.Questions.Tests/    # 🆕 Questions module tests
-    ├── QuestionRandomizer.Modules.Conversations.Tests/# 🆕 Conversations module tests
-    ├── QuestionRandomizer.Modules.Randomization.Tests/# 🆕 Randomization module tests
-    ├── QuestionRandomizer.Modules.Agent.Tests/        # 🆕 Agent module tests
-    │
-    ├── QuestionRandomizer.UnitTests/                  # Legacy unit tests
+    ├── QuestionRandomizer.Modules.Questions.Tests/    # Questions module tests
+    ├── QuestionRandomizer.Modules.Conversations.Tests/# Conversations module tests
+    ├── QuestionRandomizer.Modules.Randomization.Tests/# Randomization module tests
+    ├── QuestionRandomizer.Modules.Agent.Tests/        # Agent module tests
     ├── QuestionRandomizer.IntegrationTests.Controllers/# Integration tests (Controllers API)
     ├── QuestionRandomizer.IntegrationTests.MinimalApi/# Integration tests (Minimal API)
     └── QuestionRandomizer.E2ETests/                   # End-to-End tests
@@ -235,8 +228,8 @@ question-randomizer-backend/
 - **Cross-Module Communication:** Domain events (e.g., CategoryDeletedEvent)
 - **SharedKernel:** Domain events infrastructure, common interfaces, base entities
 - **Two complete API implementations** running side-by-side (both work with modular architecture)
-- **18 Projects Total:** 5 modules + 2 APIs + 3 legacy + 8 test projects
-- **140 migrated files** across all modules
+- **14 Projects Total:** 5 modules + 2 APIs + 7 test projects
+- **Migration Complete:** All legacy Clean Architecture projects removed
 
 ---
 

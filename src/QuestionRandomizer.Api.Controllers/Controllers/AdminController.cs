@@ -2,8 +2,8 @@ namespace QuestionRandomizer.Api.Controllers.Controllers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuestionRandomizer.Infrastructure.Authorization;
-using QuestionRandomizer.Application.Interfaces;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
+using QuestionRandomizer.SharedKernel.Application.Interfaces;
 
 /// <summary>
 /// Admin-only controller for system management

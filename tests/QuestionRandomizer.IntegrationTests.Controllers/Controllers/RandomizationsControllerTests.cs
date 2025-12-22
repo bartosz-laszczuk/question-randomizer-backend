@@ -1,13 +1,15 @@
 namespace QuestionRandomizer.IntegrationTests.Controllers.Controllers;
+using QuestionRandomizer.Modules.Conversations.Domain.Entities;
+using QuestionRandomizer.Modules.Randomization.Domain.Entities;
 
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Moq;
-using QuestionRandomizer.Application.Commands.Randomizations.CreateRandomization;
-using QuestionRandomizer.Application.Commands.Randomizations.UpdateRandomization;
-using QuestionRandomizer.Application.DTOs;
-using QuestionRandomizer.Domain.Entities;
+using QuestionRandomizer.Modules.Randomization.Application.Commands.Randomizations.CreateRandomization;
+using QuestionRandomizer.Modules.Randomization.Application.Commands.Randomizations.UpdateRandomization;
+using QuestionRandomizer.Modules.Randomization.Application.DTOs;
+using QuestionRandomizer.Modules.Questions.Domain.Entities;
 using QuestionRandomizer.IntegrationTests.Controllers.Infrastructure;
 
 /// <summary>

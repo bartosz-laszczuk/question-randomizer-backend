@@ -1,7 +1,5 @@
-using QuestionRandomizer.Application;
-using QuestionRandomizer.Infrastructure;
-using QuestionRandomizer.Infrastructure.Authorization;
 using QuestionRandomizer.SharedKernel;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
 using QuestionRandomizer.Modules.Questions;
 using QuestionRandomizer.Modules.Conversations;
 using QuestionRandomizer.Modules.Randomization;
@@ -32,9 +30,9 @@ builder.Services.AddProblemDetails(options =>
     options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
 
     // Map domain exceptions to proper HTTP status codes
-    options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.NotFoundException>(StatusCodes.Status404NotFound);
-    options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.ValidationException>(StatusCodes.Status400BadRequest);
-    options.MapToStatusCode<QuestionRandomizer.Domain.Exceptions.UnauthorizedException>(StatusCodes.Status401Unauthorized);
+    options.MapToStatusCode<QuestionRandomizer.SharedKernel.Domain.Exceptions.NotFoundException>(StatusCodes.Status404NotFound);
+    options.MapToStatusCode<QuestionRandomizer.SharedKernel.Domain.Exceptions.ValidationException>(StatusCodes.Status400BadRequest);
+    options.MapToStatusCode<QuestionRandomizer.SharedKernel.Domain.Exceptions.UnauthorizedException>(StatusCodes.Status401Unauthorized);
 });
 
 // Add SharedKernel (cross-cutting concerns, domain events)
@@ -45,12 +43,6 @@ builder.Services.AddQuestionsModule(builder.Configuration);
 builder.Services.AddConversationsModule(builder.Configuration);
 builder.Services.AddRandomizationModule();
 builder.Services.AddAgentModule(builder.Configuration);
-
-// Add Application layer (MediatR, FluentValidation) - LEGACY, will be removed
-builder.Services.AddApplication();
-
-// Add Infrastructure layer (Firebase, Repositories) - LEGACY, will be removed
-builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 // Add CORS
 builder.Services.AddCors(options =>

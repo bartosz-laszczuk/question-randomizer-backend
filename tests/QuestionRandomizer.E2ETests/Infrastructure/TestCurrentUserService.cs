@@ -1,7 +1,7 @@
 namespace QuestionRandomizer.E2ETests.Infrastructure;
 
-using QuestionRandomizer.Application.Interfaces;
-using QuestionRandomizer.Infrastructure.Authorization;
+using QuestionRandomizer.SharedKernel.Application.Interfaces;
+using QuestionRandomizer.SharedKernel.Infrastructure.Authorization;
 
 /// <summary>
 /// Test implementation of ICurrentUserService that returns predefined test user information

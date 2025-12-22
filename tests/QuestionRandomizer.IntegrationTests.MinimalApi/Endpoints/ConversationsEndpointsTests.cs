@@ -1,13 +1,15 @@
 namespace QuestionRandomizer.IntegrationTests.MinimalApi.Endpoints;
+using QuestionRandomizer.Modules.Conversations.Domain.Entities;
+using QuestionRandomizer.Modules.Randomization.Domain.Entities;
 
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Moq;
-using QuestionRandomizer.Application.Commands.Conversations.CreateConversation;
-using QuestionRandomizer.Application.Commands.Messages.AddMessage;
-using QuestionRandomizer.Application.DTOs;
-using QuestionRandomizer.Domain.Entities;
+using QuestionRandomizer.Modules.Conversations.Application.Commands.Conversations.CreateConversation;
+using QuestionRandomizer.Modules.Conversations.Application.Commands.Messages.AddMessage;
+using QuestionRandomizer.Modules.Conversations.Application.DTOs;
+using QuestionRandomizer.Modules.Questions.Domain.Entities;
 using QuestionRandomizer.IntegrationTests.MinimalApi.Infrastructure;
 
 /// <summary>

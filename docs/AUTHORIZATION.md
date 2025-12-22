@@ -136,18 +136,16 @@ User (base permissions)
 
 ```
 src/
-├── QuestionRandomizer.Infrastructure/
-│   ├── Authorization/
-│   │   └── AuthorizationPolicies.cs          # Role & policy definitions
-│   └── Services/
-│       ├── CurrentUserService.cs             # User context service
-│       └── UserManagementService.cs          # Role management via Firebase
-│
-├── QuestionRandomizer.Application/
-│   ├── Interfaces/
-│   │   └── ICurrentUserService.cs            # User service interface
-│   └── Common/
-│       └── AuthorizedHandlerBase.cs          # Base class for handlers
+├── QuestionRandomizer.SharedKernel/
+│   ├── Infrastructure/
+│   │   ├── Authorization/
+│   │   │   └── AuthorizationPolicies.cs      # Role & policy definitions
+│   │   └── Services/
+│   │       ├── CurrentUserService.cs         # User context service
+│   │       └── UserManagementService.cs      # Role management via Firebase
+│   └── Application/
+│       └── Interfaces/
+│           └── ICurrentUserService.cs        # User service interface
 │
 ├── QuestionRandomizer.Api.Controllers/
 │   ├── Program.cs                            # Policy configuration
@@ -167,7 +165,7 @@ src/
 ### Key Classes
 
 #### 1. **AuthorizationPolicies.cs**
-Location: `src/QuestionRandomizer.Infrastructure/Authorization/AuthorizationPolicies.cs`
+Location: `src/QuestionRandomizer.SharedKernel/Infrastructure/Authorization/AuthorizationPolicies.cs`
 
 ```csharp
 public static class AuthorizationPolicies

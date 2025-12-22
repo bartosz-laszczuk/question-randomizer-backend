@@ -5,9 +5,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using QuestionRandomizer.Application.Interfaces;
-using QuestionRandomizer.Domain.Entities;
-using QuestionRandomizer.Domain.Interfaces;
+using QuestionRandomizer.SharedKernel.Application.Interfaces;
+using QuestionRandomizer.Modules.Questions.Domain.Entities;
+using QuestionRandomizer.Modules.Questions.Domain.Interfaces;
+using QuestionRandomizer.Modules.Conversations.Domain.Interfaces;
+using QuestionRandomizer.Modules.Randomization.Domain.Interfaces;
+using QuestionRandomizer.Modules.Agent.Application.Interfaces;
 
 /// <summary>
 /// Custom WebApplicationFactory for integration tests with mocked dependencies
