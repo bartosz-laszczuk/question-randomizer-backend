@@ -5,7 +5,7 @@
 **Architecture:** Modular Monolith (migrated from Clean Architecture) + CQRS + MediatR
 **Database:** Firebase Firestore
 **Authentication:** Firebase Authentication
-**Last Updated:** 2025-12-22
+**Last Updated:** 2025-12-27
 
 ---
 
@@ -40,17 +40,18 @@ Build a .NET 10 backend API that serves as the orchestration layer for the Quest
 - Type-safe throughout with strong validation
 
 ### System Context
-This backend is part of a 3-service architecture:
+This backend is part of a 2-service architecture:
 1. **Angular Frontend** (existing) - User interface
-2. **C# Backend API** (this project) - Main API and orchestration
-3. **TypeScript Agent Service** - AI-powered autonomous tasks
+2. **C# Backend API** (this project) - Main API with integrated AI Agent Module
 
-**Frontend → Backend API → [Firestore, Agent Service]**
+**Frontend → Backend API → Firestore**
 
-**Agent Integration:** The C# Backend now communicates with the TypeScript AI Agent Service via:
-- Synchronous execution (POST /agent/task)
-- Streaming execution with SSE (POST /agent/task/stream)
-- Queue-based async execution (POST /agent/task/queue)
+**Agent Integration:** The AI Agent is now integrated as a module within the C# Backend:
+- **Agent Module** - Autonomous AI task execution using Claude SDK
+- **15 Agent Tools** - Direct Firestore access for data operations
+- **Hangfire** - Background task processing with retry logic
+- **Queue-based execution** - POST /api/agent/queue for async tasks
+- **Status tracking** - Firestore-backed task status persistence
 
 ---
 
@@ -81,7 +82,7 @@ This backend is part of a 3-service architecture:
 - **Questions Module** (36 files) - Question, Category, Qualification management
 - **Conversations Module** (28 files) - Conversation and message management
 - **Randomization Module** (42 files) - Question randomization, session management
-- **Agent Module** (4 files) - AI agent task execution integration
+- **Agent Module** (71 files) - Integrated AI agent with 15 tools, Hangfire queue, Firestore persistence
 
 **Rationale:**
 - **Learning Purpose:** Demonstrate modular monolith architecture
@@ -368,11 +369,15 @@ GET    /api/randomization/history/{id}     # Get specific randomization
 
 ### Agent Tasks
 ```
-POST   /api/agent/execute         # Execute AI agent task (synchronous)
-POST   /api/agent/execute/stream  # Execute with streaming progress (SSE)
-POST   /api/agent/queue           # Queue task for background processing
-GET    /api/agent/tasks/{id}      # Get task status/result
+POST   /api/agent/queue           # Queue AI agent task for background processing
+GET    /api/agent/tasks/{id}      # Get task status/result from Firestore
 ```
+
+**Note:** The Agent Module uses Hangfire for background processing with:
+- Automatic retry (3 attempts, exponential backoff: 5s, 15s, 30s)
+- Timeout protection (configurable, default: 120 seconds)
+- Firestore-backed status tracking (pending → processing → completed/failed)
+- 15 specialized tools for autonomous task execution
 
 ### Health
 ```

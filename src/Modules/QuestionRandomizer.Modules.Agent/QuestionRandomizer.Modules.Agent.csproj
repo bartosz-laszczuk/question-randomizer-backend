@@ -7,6 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- .NET 10 AI Framework -->
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.0.0" />
+
+    <!-- Anthropic SDK (upgraded to latest version with tool calling support) -->
+    <PackageReference Include="Anthropic.SDK" Version="5.8.0" />
+
+    <!-- Background Jobs -->
+    <PackageReference Include="Hangfire.Core" Version="1.8.0" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.0" />
+    <PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
+
+    <!-- Validation (match SharedKernel version) -->
+    <PackageReference Include="FluentValidation" Version="11.10.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
+
+    <!-- Existing packages -->
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
@@ -15,6 +32,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\QuestionRandomizer.SharedKernel\QuestionRandomizer.SharedKernel.csproj" />
+    <ProjectReference Include="..\QuestionRandomizer.Modules.Questions\QuestionRandomizer.Modules.Questions.csproj" />
+    <ProjectReference Include="..\QuestionRandomizer.Modules.Conversations\QuestionRandomizer.Modules.Conversations.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,8 @@
 # Modular Monolith Migration Summary
 
-**Migration Date:** 2025-12-22
-**Architecture:** Clean Architecture → Modular Monolith
-**Status:** ✅ COMPLETED
+**Migration Date:** 2025-12-22 (Modular Monolith), 2025-12-27 (Agent Module Expansion)
+**Architecture:** Clean Architecture → Modular Monolith with Integrated AI Agent
+**Status:** ✅ COMPLETED (Phase 3 Production Ready)
 **Build Status:** ✅ SUCCESS (0 errors, 21 XML documentation warnings)
 
 ---
@@ -10,6 +10,8 @@
 ## Overview
 
 Successfully migrated the Question Randomizer Backend from Clean Architecture to Modular Monolith architecture for learning and demonstration purposes. The solution now features vertical slices organized by business capability with cross-module communication via domain events.
+
+**December 2025 Update:** Consolidated the TypeScript AI Agent Service into the Backend API as the Agent Module, eliminating a separate microservice and simplifying the architecture to 2 services (Frontend + Backend with integrated agent).
 
 ---
 
@@ -54,10 +56,14 @@ Successfully migrated the Question Randomizer Backend from Clean Architecture to
 ## Migration Statistics
 
 ### Code Metrics
-- **Total C# Files Migrated:** 140 files across 4 modules
-- **Projects Added:** 8 new projects (4 modules + 4 test projects)
-- **Solution Total:** 18 projects
-- **Lines of Code:** Thousands migrated to modular structure
+- **Total C# Files:** 171 files across 4 modules + SharedKernel
+  - Questions Module: 36 files
+  - Conversations Module: 28 files
+  - Randomization Module: 42 files
+  - Agent Module: 35 files (**expanded December 2025**)
+  - SharedKernel: 30 files
+- **Projects:** 14 total (4 modules + 1 SharedKernel + 2 APIs + 7 test projects)
+- **Solution Total:** 18 projects (includes integration and E2E test projects)
 
 ### Module Breakdown
 
@@ -96,14 +102,22 @@ Successfully migrated the Question Randomizer Backend from Clean Architecture to
   - **1 Cross-module event handler** (CategoryDeletedEventHandler - removes deleted categories)
   - 6 DTOs
 
-#### 4. Agent Module (4 files)
-- **Purpose:** AI agent task execution integration
-- **Integration:** TypeScript Agent Service via HTTP
+#### 4. Agent Module (35 files) - **EXPANDED DECEMBER 2025**
+- **Purpose:** Integrated AI agent with autonomous task execution
+- **Integration:** Anthropic SDK + Hangfire + Firestore persistence
+- **Key Components:**
+  - **AgentExecutor** - Claude SDK integration with tool calling
+  - **15 Specialized Tools** (6 retrieval, 7 modification, 2 analysis)
+  - **ToolRegistry** - Dynamic tool discovery and registration
+  - **Hangfire Background Queue** - Async task processing with retry
+  - **Firestore Persistence** - Task status tracking (agent_tasks collection)
+  - **Timeout Protection** - Configurable timeout (default: 120s)
+  - **Retry Logic** - 3 attempts, exponential backoff (5s, 15s, 30s)
 - **Key Files:**
-  - IAgentService interface
-  - AgentService implementation (HTTP client with SSE streaming)
-  - 7 DTOs (AgentTaskResult, AgentTaskStatus, AgentStreamEvent, etc.)
-  - Polly retry policies
+  - Domain: AgentTask entity
+  - Application: 15 tool implementations, IAgentExecutor, IAgentTaskRepository
+  - Infrastructure: AgentExecutor, AgentTaskRepository, TaskQueueService, AgentTaskProcessor
+  - Configuration: AgentConfiguration (model, temperature, timeout, etc.)
 
 #### 5. SharedKernel (30 files)
 - **Purpose:** Cross-cutting concerns, domain events infrastructure
