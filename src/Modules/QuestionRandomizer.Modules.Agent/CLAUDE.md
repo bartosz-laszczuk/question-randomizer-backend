@@ -89,10 +89,11 @@ if (taskStatus?.Status == "completed")
 ### API Endpoints
 
 ```
-POST /api/agent/queue          # Queue background task
-POST /api/agent/execute        # Execute synchronously
-POST /api/agent/execute/stream # Execute with streaming
-GET  /api/agent/tasks/{id}     # Get task status/result
+POST /api/agent/queue                # Queue background task
+POST /api/agent/execute              # Execute synchronously
+POST /api/agent/execute/stream       # Execute with streaming (sync)
+GET  /api/agent/tasks/{id}           # Get task status/result
+GET  /api/agent/tasks/{id}/stream    # Stream real-time updates for queued task
 ```
 
 **API Request Examples:**
@@ -111,6 +112,47 @@ POST /api/agent/queue
   "conversationId": "conv-123"
 }
 ```
+
+**🆕 Real-time Streaming (Recommended for Chat UIs):**
+
+```typescript
+// Queue task
+const { taskId } = await fetch('/api/agent/queue', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ task: 'Update all uncategorized questions' })
+}).then(r => r.json());
+
+// Subscribe to real-time updates via SSE
+const eventSource = new EventSource(`/api/agent/tasks/${taskId}/stream`);
+
+eventSource.addEventListener('started', (e) => {
+  console.log('Task queued...');
+});
+
+eventSource.addEventListener('status_change', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('Status:', data.Output); // "processing", "completed", etc.
+});
+
+eventSource.addEventListener('completed', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('Result:', data.Content);
+  eventSource.close();
+});
+
+eventSource.addEventListener('error', (e) => {
+  const data = JSON.parse(e.data);
+  console.error('Error:', data.Message);
+  eventSource.close();
+});
+```
+
+**Stream Event Types:**
+- `started` - Stream initialized, task queued
+- `status_change` - Status updated (queued → processing → completed/failed)
+- `completed` - Task finished successfully (includes result)
+- `error` - Task failed or not found (includes error message)
 
 ---
 

@@ -29,6 +29,18 @@ public interface ITaskQueueService
     Task<TaskStatus> GetTaskStatusAsync(
         string taskId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get task details with userId for security
+    /// </summary>
+    /// <param name="taskId">The task ID</param>
+    /// <param name="userId">The user ID for security filtering</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Agent task details or null if not found</returns>
+    Task<Domain.AgentTask?> GetTaskWithUserIdAsync(
+        string taskId,
+        string userId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

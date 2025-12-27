@@ -41,6 +41,12 @@ public static class AgentEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status500InternalServerError);
 
+        group.MapGet("/tasks/{taskId}/stream", StreamTaskUpdates)
+            .WithName("StreamAgentTaskUpdates")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status500InternalServerError);
+
         return group;
     }
 
@@ -206,6 +212,70 @@ public static class AgentEndpoints
         {
             logger.LogError(ex, "Error getting task status for {TaskId}", taskId);
             return TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static async Task StreamTaskUpdates(
+        string taskId,
+        HttpContext context,
+        ClaimsPrincipal user,
+        IAgentService agentService,
+        ILogger<AgentStreamEvent> logger,
+        CancellationToken cancellationToken)
+    {
+        var userId = user.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        logger.LogInformation(
+            "Streaming task updates for {TaskId}, user {UserId}",
+            taskId, userId);
+
+        // Set SSE headers
+        context.Response.ContentType = "text/event-stream";
+        context.Response.Headers.Append("Cache-Control", "no-cache");
+        context.Response.Headers.Append("Connection", "keep-alive");
+        context.Response.Headers.Append("X-Accel-Buffering", "no"); // Disable nginx buffering
+
+        try
+        {
+            await foreach (var streamEvent in agentService.StreamTaskUpdatesAsync(taskId, userId, cancellationToken))
+            {
+                try
+                {
+                    // Serialize and send the event
+                    var eventData = JsonSerializer.Serialize(streamEvent);
+                    await context.Response.WriteAsync($"event: {streamEvent.Type}\n", cancellationToken);
+                    await context.Response.WriteAsync($"data: {eventData}\n\n", cancellationToken);
+                    await context.Response.Body.FlushAsync(cancellationToken);
+
+                    logger.LogDebug(
+                        "Sent stream event {EventType} for task {TaskId}",
+                        streamEvent.Type, taskId);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Error writing stream event to client for task {TaskId}", taskId);
+                    break;
+                }
+            }
+
+            logger.LogInformation("Streaming completed for task {TaskId}", taskId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during streaming for task {TaskId}", taskId);
+
+            try
+            {
+                var errorEvent = new { type = "error", message = ex.Message };
+                var errorData = JsonSerializer.Serialize(errorEvent);
+                await context.Response.WriteAsync($"event: error\n", cancellationToken);
+                await context.Response.WriteAsync($"data: {errorData}\n\n", cancellationToken);
+                await context.Response.Body.FlushAsync(cancellationToken);
+            }
+            catch
+            {
+                // Client likely disconnected
+            }
         }
     }
 }

@@ -375,8 +375,9 @@ GET    /api/randomization/history/{id}     # Get specific randomization
 ```
 POST   /api/agent/queue           # Queue AI agent task for background processing
 POST   /api/agent/execute         # Execute agent task synchronously
-POST   /api/agent/execute/stream  # Execute agent task with streaming
+POST   /api/agent/execute/stream  # Execute agent task with streaming (sync)
 GET    /api/agent/tasks/{id}      # Get task status/result from Firestore
+GET    /api/agent/tasks/{id}/stream  # Stream real-time updates for queued task (SSE)
 ```
 
 **🆕 Conversational Context Support:**
@@ -398,11 +399,38 @@ POST /api/agent/queue
 
 **Agent Features:**
 - **🆕 Conversational Context** - Multi-turn conversations with full history retention
+- **🆕 Real-time Streaming** - SSE-based streaming for queued tasks (no polling needed!)
 - **Integration** - Seamlessly integrates with Conversations Module for message persistence
 - **Automatic retry** - 3 attempts, exponential backoff (5s, 15s, 30s)
 - **Timeout protection** - Configurable, default: 120 seconds
 - **Firestore-backed tracking** - Status: pending → processing → completed/failed
 - **15 specialized tools** - Autonomous task execution with direct Firestore access
+
+**Real-time Streaming (Recommended):**
+```typescript
+// Queue task + stream updates in real-time (best approach!)
+const { taskId } = await fetch('/api/agent/queue', {
+  method: 'POST',
+  body: JSON.stringify({ task: 'Update all questions' })
+}).then(r => r.json());
+
+const eventSource = new EventSource(`/api/agent/tasks/${taskId}/stream`);
+eventSource.addEventListener('status_change', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('Status:', data.Output); // processing, completed, etc.
+});
+eventSource.addEventListener('completed', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('Result:', data.Content);
+  eventSource.close();
+});
+```
+
+**Benefits:**
+- ✅ No HTTP timeout risk (task queued in background)
+- ✅ Real-time updates via SSE (no polling overhead)
+- ✅ Automatic reconnection
+- ✅ Clean, simple client code
 
 ### Health
 ```

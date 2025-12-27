@@ -1,5 +1,6 @@
 namespace QuestionRandomizer.Modules.Agent.Infrastructure.Services;
 
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using QuestionRandomizer.Modules.Agent.Application.DTOs;
 using QuestionRandomizer.Modules.Agent.Application.Interfaces;
@@ -295,5 +296,96 @@ public class AgentService : IAgentService
         _logger.LogInformation("Agent task queued with ID {TaskId}", taskId);
 
         return taskId;
+    }
+
+    public async IAsyncEnumerable<AgentStreamEvent> StreamTaskUpdatesAsync(
+        string taskId,
+        string userId,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation(
+            "Starting stream for task {TaskId}, user {UserId}",
+            taskId, userId);
+
+        var lastStatus = string.Empty;
+        var pollInterval = 1000; // Start with 1 second
+        const int maxPollInterval = 3000; // Max 3 seconds
+
+        // Send initial status event
+        yield return new AgentStreamEvent
+        {
+            Type = "started",
+            Message = "Waiting for task to begin...",
+            Timestamp = DateTime.UtcNow
+        };
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            // Get current task status from Firestore
+            var agentTask = await _taskQueueService.GetTaskWithUserIdAsync(
+                taskId, userId, cancellationToken);
+
+            if (agentTask == null)
+            {
+                yield return new AgentStreamEvent
+                {
+                    Type = "error",
+                    Message = "Task not found",
+                    Timestamp = DateTime.UtcNow
+                };
+                yield break;
+            }
+
+            // Send update if status changed
+            if (agentTask.Status != lastStatus)
+            {
+                lastStatus = agentTask.Status;
+
+                yield return new AgentStreamEvent
+                {
+                    Type = "status_change",
+                    Message = $"Status: {agentTask.Status}",
+                    Output = agentTask.Status,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                // Reset to faster polling on status change
+                pollInterval = 1000;
+            }
+
+            // Check if task is in terminal state
+            if (agentTask.Status == "completed")
+            {
+                yield return new AgentStreamEvent
+                {
+                    Type = "completed",
+                    Message = "Task completed successfully",
+                    Content = agentTask.Result,
+                    Output = agentTask.Result,
+                    Timestamp = DateTime.UtcNow
+                };
+                yield break;
+            }
+
+            if (agentTask.Status == "failed")
+            {
+                yield return new AgentStreamEvent
+                {
+                    Type = "error",
+                    Message = agentTask.Error ?? "Task failed",
+                    Output = agentTask.Error,
+                    Timestamp = DateTime.UtcNow
+                };
+                yield break;
+            }
+
+            // Wait before next poll (exponential backoff)
+            await Task.Delay(pollInterval, cancellationToken);
+            pollInterval = Math.Min((int)(pollInterval * 1.5), maxPollInterval);
+        }
+
+        _logger.LogInformation(
+            "Stream cancelled for task {TaskId}",
+            taskId);
     }
 }

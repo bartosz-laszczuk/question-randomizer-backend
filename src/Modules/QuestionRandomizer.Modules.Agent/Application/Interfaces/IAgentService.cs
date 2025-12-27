@@ -58,4 +58,16 @@ public interface IAgentService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Status of the task</returns>
     Task<AgentTaskStatus> GetTaskStatusAsync(string taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams real-time updates for a queued agent task
+    /// </summary>
+    /// <param name="taskId">The task ID</param>
+    /// <param name="userId">The user ID for security filtering</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Async stream of task update events</returns>
+    IAsyncEnumerable<AgentStreamEvent> StreamTaskUpdatesAsync(
+        string taskId,
+        string userId,
+        CancellationToken cancellationToken = default);
 }
