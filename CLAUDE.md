@@ -11,6 +11,7 @@
 
 ## 📚 Documentation Index
 
+### Core Documentation
 - **[MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md)** - 🆕 Complete Modular Monolith migration summary
 - **[CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md)** - All code templates and patterns
 - **[SETUP-GUIDE.md](./docs/SETUP-GUIDE.md)** - Complete step-by-step setup instructions
@@ -19,6 +20,9 @@
 - **[DUAL-API-GUIDE.md](./docs/DUAL-API-GUIDE.md)** - Controllers vs Minimal API comparison
 - **[TESTING.md](./docs/TESTING.md)** - Testing strategy and examples
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide for Docker, Azure, AWS, Kubernetes
+
+### Module-Specific Documentation
+- **[Agent Module Guide](./src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md)** - 🤖 AI Agent development guide (tools, configuration, examples)
 
 ---
 
@@ -547,6 +551,7 @@ curl http://localhost:5001/api/questions  # Minimal API
    - Explore module structure: Domain → Application → Infrastructure
    - Understand cross-module communication via domain events (see CategoryDeletedEvent example)
    - Examine both API implementations side-by-side
+   - **For Agent Module:** Read [Agent Module Guide](./src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md) for AI tools and development
 
 4. **Run and Test**
    - Start Controllers API: `cd src/QuestionRandomizer.Api.Controllers && dotnet run`
@@ -568,6 +573,7 @@ curl http://localhost:5001/api/questions  # Minimal API
 
 ### Documentation
 - **[MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md)** - 🆕 Complete Modular Monolith migration summary with architecture comparison
+- **[Agent Module Guide](./src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md)** - 🤖 AI Agent development guide (tools, configuration, examples)
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide for Docker, Azure, AWS, Kubernetes
 - **[SECURITY-AUDIT.md](./docs/SECURITY-AUDIT.md)** - Security checklist and best practices
 - **[INTEGRATION-TEST-SUMMARY.md](./INTEGRATION-TEST-SUMMARY.md)** - Detailed test results and coverage
