@@ -28,13 +28,14 @@ public class TaskQueueService : ITaskQueueService
     public async Task<string> QueueTaskAsync(
         string task,
         string userId,
+        string? conversationId = null,
         CancellationToken cancellationToken = default)
     {
         var taskId = Guid.NewGuid().ToString();
 
         _logger.LogInformation(
-            "Queueing agent task {TaskId} for user {UserId}",
-            taskId, userId);
+            "Queueing agent task {TaskId} for user {UserId} (ConversationId: {ConversationId})",
+            taskId, userId, conversationId ?? "none");
 
         // Create task in Firestore with pending status
         var agentTask = new AgentTask
@@ -42,6 +43,7 @@ public class TaskQueueService : ITaskQueueService
             TaskId = taskId,
             UserId = userId,
             TaskDescription = task,
+            ConversationId = conversationId,
             Status = "pending",
             CreatedAt = DateTime.UtcNow
         };
@@ -50,7 +52,7 @@ public class TaskQueueService : ITaskQueueService
 
         // Enqueue the task for background processing
         var jobId = _backgroundJobClient.Enqueue<AgentTaskProcessor>(
-            processor => processor.ProcessTaskAsync(taskId, task, userId, CancellationToken.None));
+            processor => processor.ProcessTaskAsync(taskId, task, userId, conversationId, CancellationToken.None));
 
         // Update task with job ID
         agentTask.JobId = jobId;

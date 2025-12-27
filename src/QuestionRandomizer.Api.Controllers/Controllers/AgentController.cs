@@ -47,9 +47,15 @@ public class AgentController : ControllerBase
 
         var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        _logger.LogInformation("Executing agent task for user {UserId}", userId);
+        _logger.LogInformation(
+            "Executing agent task for user {UserId} (ConversationId: {ConversationId})",
+            userId, request.ConversationId ?? "none");
 
-        var result = await _agentService.ExecuteTaskAsync(request.Task, userId, cancellationToken);
+        var result = await _agentService.ExecuteTaskAsync(
+            request.Task,
+            userId,
+            request.ConversationId,
+            cancellationToken);
 
         if (!result.Success)
         {
@@ -81,7 +87,9 @@ public class AgentController : ControllerBase
 
         var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        _logger.LogInformation("Executing streaming agent task for user {UserId}", userId);
+        _logger.LogInformation(
+            "Executing streaming agent task for user {UserId} (ConversationId: {ConversationId})",
+            userId, request.ConversationId ?? "none");
 
         // Set SSE headers
         Response.ContentType = "text/event-stream";
@@ -101,6 +109,7 @@ public class AgentController : ControllerBase
                     Response.WriteAsync($"data: {eventData}\n\n", cancellationToken).Wait();
                     Response.Body.FlushAsync(cancellationToken).Wait();
                 },
+                request.ConversationId,
                 cancellationToken);
 
             _logger.LogInformation("Streaming agent task completed for user {UserId}", userId);
@@ -136,11 +145,17 @@ public class AgentController : ControllerBase
 
         var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        _logger.LogInformation("Queueing agent task for user {UserId}", userId);
+        _logger.LogInformation(
+            "Queueing agent task for user {UserId} (ConversationId: {ConversationId})",
+            userId, request.ConversationId ?? "none");
 
         try
         {
-            var taskId = await _agentService.QueueTaskAsync(request.Task, userId, cancellationToken);
+            var taskId = await _agentService.QueueTaskAsync(
+                request.Task,
+                userId,
+                request.ConversationId,
+                cancellationToken);
 
             _logger.LogInformation("Agent task queued with ID {TaskId}", taskId);
 
@@ -208,7 +223,7 @@ public class AgentController : ControllerBase
 public record ExecuteTaskRequest
 {
     public string Task { get; init; } = string.Empty;
-    public string? Context { get; init; }
+    public string? ConversationId { get; init; }
 }
 
 /// <summary>

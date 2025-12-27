@@ -58,9 +58,15 @@ public static class AgentEndpoints
 
         var userId = user.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        logger.LogInformation("Executing agent task for user {UserId}", userId);
+        logger.LogInformation(
+            "Executing agent task for user {UserId} (ConversationId: {ConversationId})",
+            userId, request.ConversationId ?? "none");
 
-        var result = await agentService.ExecuteTaskAsync(request.Task, userId, cancellationToken);
+        var result = await agentService.ExecuteTaskAsync(
+            request.Task,
+            userId,
+            request.ConversationId,
+            cancellationToken);
 
         if (!result.Success)
         {
@@ -87,7 +93,9 @@ public static class AgentEndpoints
 
         var userId = user.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        logger.LogInformation("Executing streaming agent task for user {UserId}", userId);
+        logger.LogInformation(
+            "Executing streaming agent task for user {UserId} (ConversationId: {ConversationId})",
+            userId, request.ConversationId ?? "none");
 
         // Set SSE headers
         context.Response.ContentType = "text/event-stream";
@@ -114,6 +122,7 @@ public static class AgentEndpoints
                         logger.LogWarning(ex, "Error writing stream event to client");
                     }
                 },
+                request.ConversationId,
                 cancellationToken);
 
             logger.LogInformation("Streaming agent task completed for user {UserId}", userId);
@@ -142,11 +151,17 @@ public static class AgentEndpoints
 
         var userId = user.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        logger.LogInformation("Queueing agent task for user {UserId}", userId);
+        logger.LogInformation(
+            "Queueing agent task for user {UserId} (ConversationId: {ConversationId})",
+            userId, request.ConversationId ?? "none");
 
         try
         {
-            var taskId = await agentService.QueueTaskAsync(request.Task, userId, cancellationToken);
+            var taskId = await agentService.QueueTaskAsync(
+                request.Task,
+                userId,
+                request.ConversationId,
+                cancellationToken);
 
             logger.LogInformation("Agent task queued with ID {TaskId}", taskId);
 
@@ -198,7 +213,7 @@ public static class AgentEndpoints
 /// <summary>
 /// Request model for executing a task
 /// </summary>
-public record ExecuteTaskRequest(string Task, string? Context = null);
+public record ExecuteTaskRequest(string Task, string? ConversationId = null);
 
 /// <summary>
 /// Response model for queuing a task

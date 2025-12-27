@@ -506,6 +506,116 @@ Check application logs for agent execution details:
 
 ---
 
+## Example 7: 🆕 Conversational Multi-Turn Task
+
+### User Request (Turn 1 - Start Conversation)
+```http
+POST /api/agent/queue
+{
+  "task": "Update all uncategorized questions"
+}
+
+Response: {
+  "taskId": "task-789",
+  "message": "Task queued for processing"
+}
+```
+
+### Agent Execution (Turn 1)
+- **No conversationId** provided → Creates new conversation "conv-123"
+- **No conversation history** → Agent starts fresh
+- Saves user message: "Update all uncategorized questions"
+- Executes task:
+  1. Calls `get_uncategorized_questions` → Finds 15 questions
+  2. Calls `get_categories` → Gets available categories
+  3. Calls `update_question_category` 15 times → Categorizes each question
+- Agent response: "✅ Successfully updated 15 questions: q-1, q-2, q-3, q-4, q-5, q-6, q-7, q-8, q-9, q-10, q-11, q-12, q-13, q-14, q-15"
+- Saves assistant message to conversation "conv-123"
+
+### User Request (Turn 2 - Continue Conversation)
+```http
+POST /api/agent/queue
+{
+  "task": "Provide me the ids of all updated questions",
+  "conversationId": "conv-123"
+}
+```
+
+### Agent Execution (Turn 2)
+- **conversationId: "conv-123"** → Loads conversation history:
+  ```
+  Turn 1 User: "Update all uncategorized questions"
+  Turn 1 Agent: "✅ Successfully updated 15 questions: q-1, q-2, q-3..."
+  ```
+- **Agent sees FULL CONTEXT!** Knows about the 15 updated questions from Turn 1
+- Saves new user message: "Provide me the ids of all updated questions"
+- Agent analyzes:
+  - "The user is asking for the question IDs"
+  - "I already mentioned them in my previous response"
+  - "The IDs are: q-1, q-2, q-3, q-4, q-5, q-6, q-7, q-8, q-9, q-10, q-11, q-12, q-13, q-14, q-15"
+- Agent response: "The updated question IDs are: q-1, q-2, q-3, q-4, q-5, q-6, q-7, q-8, q-9, q-10, q-11, q-12, q-13, q-14, q-15"
+- Saves assistant message to conversation "conv-123"
+
+### User Request (Turn 3 - Continue Conversation)
+```http
+POST /api/agent/queue
+{
+  "task": "Delete the first 3 questions",
+  "conversationId": "conv-123"
+}
+```
+
+### Agent Execution (Turn 3)
+- **conversationId: "conv-123"** → Loads full conversation history:
+  ```
+  Turn 1 User: "Update all uncategorized questions"
+  Turn 1 Agent: "✅ Successfully updated 15 questions: q-1, q-2, q-3..."
+  Turn 2 User: "Provide me the ids of all updated questions"
+  Turn 2 Agent: "The updated question IDs are: q-1, q-2, q-3, q-4..."
+  ```
+- **Agent sees FULL CONTEXT!** Knows:
+  - Which 15 questions were updated
+  - Their IDs: q-1 through q-15
+  - "First 3" means q-1, q-2, q-3
+- Saves new user message: "Delete the first 3 questions"
+- Executes task:
+  1. Calls `delete_question` for q-1
+  2. Calls `delete_question` for q-2
+  3. Calls `delete_question` for q-3
+- Agent response: "✅ Successfully deleted questions q-1, q-2, and q-3"
+- Saves assistant message to conversation "conv-123"
+
+### Key Points
+
+**Conversational Context Benefits:**
+- ✅ Agent remembers ALL previous messages (user + assistant)
+- ✅ Can reference previous responses ("the first 3" → q-1, q-2, q-3)
+- ✅ Natural multi-turn interaction like ChatGPT
+- ✅ No need to repeat information across turns
+
+**Implementation Details:**
+- **Automatic conversation creation** when conversationId is null
+- **Conversation persistence** in Firestore (conversations + messages collections)
+- **Secure by design** - All conversations filtered by userId
+- **Works everywhere** - Queue, execute, and streaming endpoints
+
+**Use Cases:**
+- Multi-step workflows
+- Iterative refinement
+- Follow-up questions
+- Context-dependent operations
+
+**Comparison:**
+
+| Without conversationId | With conversationId |
+|----------------------|-------------------|
+| One-shot task | Multi-turn conversation |
+| No context | Full conversation history |
+| Agent starts fresh | Agent remembers everything |
+| For standalone tasks | For related follow-ups |
+
+---
+
 ## Related Documentation
 
 - **[AGENT-TOOLS-REFERENCE.md](./AGENT-TOOLS-REFERENCE.md)** - Complete reference of all 15 tools

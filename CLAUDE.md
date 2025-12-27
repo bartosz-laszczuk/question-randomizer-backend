@@ -374,14 +374,35 @@ GET    /api/randomization/history/{id}     # Get specific randomization
 ### Agent Tasks
 ```
 POST   /api/agent/queue           # Queue AI agent task for background processing
+POST   /api/agent/execute         # Execute agent task synchronously
+POST   /api/agent/execute/stream  # Execute agent task with streaming
 GET    /api/agent/tasks/{id}      # Get task status/result from Firestore
 ```
 
-**Note:** The Agent Module uses Hangfire for background processing with:
-- Automatic retry (3 attempts, exponential backoff: 5s, 15s, 30s)
-- Timeout protection (configurable, default: 120 seconds)
-- Firestore-backed status tracking (pending → processing → completed/failed)
-- 15 specialized tools for autonomous task execution
+**🆕 Conversational Context Support:**
+All agent endpoints now support `conversationId` for multi-turn conversations:
+```json
+// New conversation (creates automatically)
+POST /api/agent/queue
+{
+  "task": "Update all uncategorized questions"
+}
+
+// Continue conversation (agent remembers context!)
+POST /api/agent/queue
+{
+  "task": "Provide me the ids of all updated questions",
+  "conversationId": "conv-123"
+}
+```
+
+**Agent Features:**
+- **🆕 Conversational Context** - Multi-turn conversations with full history retention
+- **Integration** - Seamlessly integrates with Conversations Module for message persistence
+- **Automatic retry** - 3 attempts, exponential backoff (5s, 15s, 30s)
+- **Timeout protection** - Configurable, default: 120 seconds
+- **Firestore-backed tracking** - Status: pending → processing → completed/failed
+- **15 specialized tools** - Autonomous task execution with direct Firestore access
 
 ### Health
 ```

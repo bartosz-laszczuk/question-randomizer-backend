@@ -22,6 +22,11 @@ public class AgentTask
     public string TaskDescription { get; set; } = string.Empty;
 
     /// <summary>
+    /// Optional conversation ID for context continuity
+    /// </summary>
+    public string? ConversationId { get; set; }
+
+    /// <summary>
     /// Current status: pending, processing, completed, failed
     /// </summary>
     public string Status { get; set; } = "pending";

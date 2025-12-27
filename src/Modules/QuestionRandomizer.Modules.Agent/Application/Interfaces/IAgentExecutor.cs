@@ -13,11 +13,13 @@ public interface IAgentExecutor
     /// </summary>
     /// <param name="task">The task description for the agent</param>
     /// <param name="userId">The user ID making the request (used for security filtering in tools)</param>
+    /// <param name="conversationHistory">Optional conversation history for context (role, content pairs)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Result of the agent task execution</returns>
     Task<AgentTaskResult> ExecuteTaskAsync(
         string task,
         string userId,
+        List<ConversationMessage>? conversationHistory = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -25,10 +27,12 @@ public interface IAgentExecutor
     /// </summary>
     /// <param name="task">The task description for the agent</param>
     /// <param name="userId">The user ID making the request</param>
+    /// <param name="conversationHistory">Optional conversation history for context (role, content pairs)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Async enumerable of progress events</returns>
     IAsyncEnumerable<AgentStreamEvent> ExecuteTaskStreamingAsync(
         string task,
         string userId,
+        List<ConversationMessage>? conversationHistory = null,
         CancellationToken cancellationToken = default);
 }

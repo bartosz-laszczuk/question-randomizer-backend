@@ -42,6 +42,7 @@ public class AgentExecutor : IAgentExecutor
     public async Task<AgentTaskResult> ExecuteTaskAsync(
         string task,
         string userId,
+        List<ConversationMessage>? conversationHistory = null,
         CancellationToken cancellationToken = default)
     {
         var taskId = Guid.NewGuid().ToString();
@@ -49,14 +50,14 @@ public class AgentExecutor : IAgentExecutor
         try
         {
             _logger.LogInformation(
-                "Starting agent task {TaskId} for user {UserId}: {Task}",
-                taskId, userId, task);
+                "Starting agent task {TaskId} for user {UserId}: {Task} (Conversation history: {HasHistory})",
+                taskId, userId, task, conversationHistory?.Count > 0);
 
             // Wrap execution with timeout protection
             var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(TimeSpan.FromSeconds(_config.TimeoutSeconds));
 
-            var executionTask = ExecuteAgentLoopAsync(taskId, task, userId, timeoutCts.Token);
+            var executionTask = ExecuteAgentLoopAsync(taskId, task, userId, conversationHistory, timeoutCts.Token);
             var completedTask = await Task.WhenAny(
                 executionTask,
                 Task.Delay(TimeSpan.FromSeconds(_config.TimeoutSeconds), cancellationToken));
@@ -113,6 +114,7 @@ public class AgentExecutor : IAgentExecutor
         string taskId,
         string task,
         string userId,
+        List<ConversationMessage>? conversationHistory,
         CancellationToken cancellationToken)
     {
         try
@@ -120,18 +122,36 @@ public class AgentExecutor : IAgentExecutor
             // Build tool definitions
             var toolDefinitions = BuildToolDefinitions();
 
-            // Initialize conversation with user task
-            var messages = new List<Message>
+            // Initialize conversation with history (if provided) or start fresh
+            var messages = new List<Message>();
+
+            // Add conversation history if provided
+            if (conversationHistory != null && conversationHistory.Count > 0)
             {
-                new()
+                foreach (var msg in conversationHistory)
                 {
-                    Role = RoleType.User,
-                    Content = new List<ContentBase>
+                    messages.Add(new Message
                     {
-                        new TextContent { Text = task }
-                    }
+                        Role = msg.Role.ToLower() == "user" ? RoleType.User : RoleType.Assistant,
+                        Content = new List<ContentBase>
+                        {
+                            new TextContent { Text = msg.Content }
+                        }
+                    });
                 }
-            };
+
+                _logger.LogDebug("Loaded {Count} messages from conversation history", conversationHistory.Count);
+            }
+
+            // Add current task as new user message
+            messages.Add(new Message
+            {
+                Role = RoleType.User,
+                Content = new List<ContentBase>
+                {
+                    new TextContent { Text = task }
+                }
+            });
 
             // Agent loop - iterate until task completion or max iterations
             var iteration = 0;
@@ -274,6 +294,7 @@ public class AgentExecutor : IAgentExecutor
     public async IAsyncEnumerable<AgentStreamEvent> ExecuteTaskStreamingAsync(
         string task,
         string userId,
+        List<ConversationMessage>? conversationHistory = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var taskId = Guid.NewGuid().ToString();
@@ -290,7 +311,7 @@ public class AgentExecutor : IAgentExecutor
         // basic streaming by executing normally and yielding periodic updates.
         // True token-by-token streaming can be added in Phase 4.
 
-        var result = await ExecuteTaskAsync(task, userId, cancellationToken);
+        var result = await ExecuteTaskAsync(task, userId, conversationHistory, cancellationToken);
 
         if (result.Success)
         {

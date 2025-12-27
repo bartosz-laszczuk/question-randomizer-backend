@@ -26,9 +26,10 @@ AFTER:  Frontend → Backend (with integrated Agent Module)
 ```
 
 **Key Features:**
+- **🆕 Conversational Context** - Multi-turn conversations with full history
 - 15 specialized tools (6 retrieval, 7 modification, 2 analysis)
 - Background processing with Hangfire
-- Firestore persistence for task status/results
+- Firestore persistence for task status/results & conversations
 - Automatic retry with exponential backoff (5s, 15s, 30s)
 - Timeout protection (default: 120s)
 - Secure user data isolation
@@ -39,16 +40,38 @@ AFTER:  Frontend → Backend (with integrated Agent Module)
 
 ## Quick Start
 
-### Queue a Task
+### One-Shot Task (No Conversation)
 
 ```csharp
 // In your controller/handler
 var taskId = await _taskQueueService.QueueTaskAsync(
     task: "Categorize all uncategorized questions about JavaScript",
     userId: currentUserId,
+    conversationId: null,  // Creates new conversation
     cancellationToken
 );
 // Returns immediately with taskId
+```
+
+### 🆕 Conversational Task (With Context)
+
+```csharp
+// Turn 1: Start conversation
+var taskId1 = await _taskQueueService.QueueTaskAsync(
+    task: "Update all uncategorized questions",
+    userId: currentUserId,
+    conversationId: null,  // Creates conversation "conv-123"
+    cancellationToken
+);
+
+// Turn 2: Continue conversation (agent remembers Turn 1!)
+var taskId2 = await _taskQueueService.QueueTaskAsync(
+    task: "Provide me the ids of all updated questions",
+    userId: currentUserId,
+    conversationId: "conv-123",  // Uses conversation history
+    cancellationToken
+);
+// Agent will know which questions were updated in Turn 1!
 ```
 
 ### Check Status
@@ -67,7 +90,26 @@ if (taskStatus?.Status == "completed")
 
 ```
 POST /api/agent/queue          # Queue background task
+POST /api/agent/execute        # Execute synchronously
+POST /api/agent/execute/stream # Execute with streaming
 GET  /api/agent/tasks/{id}     # Get task status/result
+```
+
+**API Request Examples:**
+
+```json
+// New conversation
+POST /api/agent/queue
+{
+  "task": "Update all uncategorized questions"
+}
+
+// Continue conversation
+POST /api/agent/queue
+{
+  "task": "Provide the ids",
+  "conversationId": "conv-123"
+}
 ```
 
 ---
@@ -100,10 +142,101 @@ Agent Module
 **Flow:**
 1. User queues task → TaskQueueService
 2. Hangfire picks up job → AgentTaskProcessor
-3. AgentExecutor runs agent loop with Claude API
-4. Tools called autonomously based on task
-5. Result/error stored in Firestore
-6. User retrieves result via API
+3. **🆕 Load conversation history** (if conversationId provided)
+4. **🆕 Save user message** to conversation
+5. AgentExecutor runs agent loop with Claude API + conversation context
+6. Tools called autonomously based on task
+7. **🆕 Save agent response** to conversation
+8. Result/error stored in Firestore
+9. User retrieves result via API
+
+---
+
+## 🆕 Conversational Context
+
+The Agent Module now supports **multi-turn conversations** with full context retention, enabling ChatGPT-like interactions.
+
+### How It Works
+
+**Without conversationId (One-Shot):**
+- Creates a new conversation automatically
+- Agent has NO previous context
+- Use for standalone tasks
+
+**With conversationId (Conversational):**
+- Fetches conversation history from Firestore
+- Agent sees ALL previous messages (user + assistant)
+- Use for follow-up questions, refinements, multi-step tasks
+
+### Example Flow
+
+```
+Turn 1: "Update all uncategorized questions"
+├─ Creates conversation: conv-123
+├─ User message saved: "Update all uncategorized questions"
+├─ Agent executes with NO history
+├─ Agent response: "✅ Updated 15 questions: q-1, q-2, q-3..."
+└─ Response saved to conversation
+
+Turn 2: "Provide me the ids" (conversationId: conv-123)
+├─ Loads history: Turn 1 messages
+├─ User message saved: "Provide me the ids"
+├─ Agent sees FULL CONTEXT (knows about the 15 updated questions!)
+├─ Agent response: "The updated IDs are: q-1, q-2, q-3, q-4..."
+└─ Response saved to conversation
+
+Turn 3: "Delete the first 3" (conversationId: conv-123)
+├─ Loads history: Turn 1 + Turn 2 messages
+├─ Agent knows which questions AND which IDs!
+├─ Agent response: "✅ Deleted q-1, q-2, q-3"
+└─ Continues naturally like ChatGPT
+```
+
+### Integration with Conversations Module
+
+The Agent Module integrates seamlessly with the **Conversations Module**:
+- **Creates conversations** automatically when conversationId is null
+- **Loads messages** using `IMessageRepository.GetByConversationIdAsync()`
+- **Saves messages** using `IMessageRepository.CreateAsync()`
+- **Updates timestamps** using `IConversationRepository.UpdateTimestampAsync()`
+- **Secure by design** - All operations filtered by userId
+
+### Conversation Storage
+
+**Firestore Collections:**
+```
+conversations/               # Conversation metadata
+  conv-123/
+    - id: "conv-123"
+    - userId: "user-456"
+    - title: "Update all uncategorized..."
+    - createdAt: "2025-12-27T10:00:00Z"
+    - updatedAt: "2025-12-27T10:05:00Z"
+
+messages/                   # Conversation messages
+  msg-1/
+    - conversationId: "conv-123"
+    - role: "user"
+    - content: "Update all uncategorized questions"
+    - timestamp: "2025-12-27T10:00:00Z"
+  msg-2/
+    - conversationId: "conv-123"
+    - role: "assistant"
+    - content: "✅ Updated 15 questions..."
+    - timestamp: "2025-12-27T10:00:45Z"
+```
+
+### Use Cases
+
+**✅ Perfect for Conversational Tasks:**
+- Multi-step workflows: "Update X", then "Provide details", then "Delete some"
+- Iterative refinement: "Find duplicates", then "Delete the ones from category X"
+- Follow-up questions: "Categorize questions", then "How many did you categorize?"
+- Context-dependent operations: "Show me Python questions", then "Update them all"
+
+**❌ Not Needed for One-Shot Tasks:**
+- Single operations: "Categorize all uncategorized questions" (complete in one go)
+- Independent tasks: Each task is unrelated to previous ones
 
 ---
 

@@ -12,6 +12,22 @@ public record AgentTaskResult
 }
 
 /// <summary>
+/// Represents a single message in a conversation for passing context to the agent
+/// </summary>
+public record ConversationMessage
+{
+    /// <summary>
+    /// Role of the message sender (user or assistant)
+    /// </summary>
+    public string Role { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Content of the message
+    /// </summary>
+    public string Content { get; init; } = string.Empty;
+}
+
+/// <summary>
 /// Status of an agent task
 /// </summary>
 public record AgentTaskStatus
