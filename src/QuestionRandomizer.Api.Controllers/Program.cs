@@ -18,6 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// Add SignalR for real-time streaming
+builder.Services.AddSignalR();
+
 // Only add Swagger in Development environment (not Testing)
 if (!builder.Environment.IsEnvironment("Testing"))
 {
@@ -151,6 +154,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// Map SignalR Hub
+app.MapHub<QuestionRandomizer.Modules.Agent.Infrastructure.Hubs.AgentHub>("/agentHub");
 
 app.Run();
 

@@ -42,7 +42,15 @@
       "Bash(done)",
       "Bash(grep:*)",
       "Bash(xargs sed:*)",
-      "Bash(timeout 10 dotnet test:*)"
+      "Bash(timeout 10 dotnet test:*)",
+      "Bash(npm run nx:*)",
+      "Bash(npx nx build:*)",
+      "Bash(npx nx show projects)",
+      "Bash(npx nx lint:*)",
+      "Bash(timeout 60 npx nx serve:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx nx serve:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

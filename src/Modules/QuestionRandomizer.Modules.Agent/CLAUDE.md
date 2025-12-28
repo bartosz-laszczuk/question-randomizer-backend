@@ -93,7 +93,6 @@ POST /api/agent/queue                # Queue background task
 POST /api/agent/execute              # Execute synchronously
 POST /api/agent/execute/stream       # Execute with streaming (sync)
 GET  /api/agent/tasks/{id}           # Get task status/result
-GET  /api/agent/tasks/{id}/stream    # Stream real-time updates for queued task
 ```
 
 **API Request Examples:**
@@ -113,9 +112,16 @@ POST /api/agent/queue
 }
 ```
 
-**🆕 Real-time Streaming (Recommended for Chat UIs):**
+**🆕 Real-time Streaming with SignalR (Recommended for Chat UIs):**
+
+```bash
+# Install SignalR client
+npm install @microsoft/signalr
+```
 
 ```typescript
+import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
+
 // Queue task
 const { taskId } = await fetch('/api/agent/queue', {
   method: 'POST',
@@ -123,28 +129,59 @@ const { taskId } = await fetch('/api/agent/queue', {
   body: JSON.stringify({ task: 'Update all uncategorized questions' })
 }).then(r => r.json());
 
-// Subscribe to real-time updates via SSE
-const eventSource = new EventSource(`/api/agent/tasks/${taskId}/stream`);
+// Create SignalR connection
+const connection: HubConnection = new HubConnectionBuilder()
+  .withUrl('http://localhost:5000/agentHub', {
+    accessTokenFactory: async () => {
+      // Return your Firebase auth token
+      return await getAuthToken();
+    }
+  })
+  .withAutomaticReconnect({
+    nextRetryDelayInMilliseconds: (retryContext) => {
+      // Exponential backoff: 1s, 2s, 4s, 8s, max 10s
+      return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 10000);
+    }
+  })
+  .build();
 
-eventSource.addEventListener('started', (e) => {
-  console.log('Task queued...');
-});
+// Handle reconnection events (optional)
+connection.onreconnecting(() => console.log('[SignalR] Reconnecting...'));
+connection.onreconnected(() => console.log('[SignalR] Reconnected!'));
+connection.onclose((error) => console.log('[SignalR] Connection closed', error));
 
-eventSource.addEventListener('status_change', (e) => {
-  const data = JSON.parse(e.data);
-  console.log('Status:', data.Output); // "processing", "completed", etc.
-});
+// Start connection
+await connection.start();
+console.log('[SignalR] Connected successfully');
 
-eventSource.addEventListener('completed', (e) => {
-  const data = JSON.parse(e.data);
-  console.log('Result:', data.Content);
-  eventSource.close();
-});
-
-eventSource.addEventListener('error', (e) => {
-  const data = JSON.parse(e.data);
-  console.error('Error:', data.Message);
-  eventSource.close();
+// Subscribe to task updates stream
+connection.stream<AgentStreamEvent>('StreamTaskUpdates', taskId).subscribe({
+  next: (event) => {
+    console.log('Event:', event.type, event.message);
+    // Handle different event types
+    switch (event.type) {
+      case 'started':
+        console.log('Task started...');
+        break;
+      case 'status_change':
+        console.log('Status:', event.output);
+        break;
+      case 'completed':
+        console.log('Result:', event.content);
+        break;
+      case 'error':
+        console.error('Error:', event.message);
+        break;
+    }
+  },
+  complete: () => {
+    console.log('Stream completed');
+    connection.stop();
+  },
+  error: (err) => {
+    console.error('Stream error:', err);
+    connection.stop();
+  }
 });
 ```
 
@@ -153,6 +190,14 @@ eventSource.addEventListener('error', (e) => {
 - `status_change` - Status updated (queued → processing → completed/failed)
 - `completed` - Task finished successfully (includes result)
 - `error` - Task failed or not found (includes error message)
+- `heartbeat` - Keep-alive ping (connection health check)
+
+**Why SignalR?**
+- ✅ **Auto-reconnection** - Built-in exponential backoff (no manual implementation)
+- ✅ **Protocol negotiation** - Tries WebSockets → SSE → Long Polling automatically
+- ✅ **Simpler code** - ~80 lines vs ~250 with manual SSE implementation
+- ✅ **Better reliability** - Battle-tested by Microsoft, handles edge cases
+- ✅ **TypeScript support** - Full type safety with generics
 
 ---
 
@@ -174,12 +219,20 @@ Agent Module
     ├── AI
     │   ├── AgentExecutor      # Claude SDK integration, tool calling loop
     │   └── AgentConfiguration # Model, temperature, timeout settings
+    ├── Hubs
+    │   └── AgentHub           # 🆕 SignalR Hub for real-time streaming
     ├── Queue
     │   ├── TaskQueueService   # Hangfire queue management
     │   └── AgentTaskProcessor # Background worker with retry
     └── Repositories
         └── AgentTaskRepository # Firestore persistence
 ```
+
+**SignalR Hub Endpoint:**
+- **URL:** `/agentHub` (both Controllers and Minimal API)
+- **Method:** `StreamTaskUpdates(taskId)` - Server-to-client streaming
+- **Protocol:** WebSockets (falls back to SSE, then Long Polling)
+- **Authentication:** Firebase JWT via `accessTokenFactory`
 
 **Flow:**
 1. User queues task → TaskQueueService

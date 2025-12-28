@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <!-- .NET 10 AI Framework -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.0.0" />
 
