@@ -24,11 +24,6 @@ public static class AgentEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status500InternalServerError);
 
-        group.MapPost("/execute/stream", ExecuteTaskStreaming)
-            .WithName("ExecuteAgentTaskStreaming")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest);
-
         group.MapPost("/queue", QueueTask)
             .WithName("QueueAgentTask")
             .Produces<QueueTaskResponse>(StatusCodes.Status202Accepted)
@@ -74,67 +69,6 @@ public static class AgentEndpoints
         }
 
         return TypedResults.Ok(result);
-    }
-
-    private static async Task ExecuteTaskStreaming(
-        ExecuteTaskRequest request,
-        HttpContext context,
-        ClaimsPrincipal user,
-        IAgentService agentService,
-        ILogger<AgentTaskResult> logger,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(request.Task))
-        {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsync("Task description is required", cancellationToken);
-            return;
-        }
-
-        var userId = user.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
-
-        logger.LogInformation(
-            "Executing streaming agent task for user {UserId} (ConversationId: {ConversationId})",
-            userId, request.ConversationId ?? "none");
-
-        // Set SSE headers
-        context.Response.ContentType = "text/event-stream";
-        context.Response.Headers.Append("Cache-Control", "no-cache");
-        context.Response.Headers.Append("Connection", "keep-alive");
-
-        try
-        {
-            await agentService.ExecuteTaskStreamingAsync(
-                request.Task,
-                userId,
-                async streamEvent =>
-                {
-                    try
-                    {
-                        // Forward stream events to client
-                        var eventData = JsonSerializer.Serialize(streamEvent);
-                        await context.Response.WriteAsync($"event: {streamEvent.Type}\n", cancellationToken);
-                        await context.Response.WriteAsync($"data: {eventData}\n\n", cancellationToken);
-                        await context.Response.Body.FlushAsync(cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogWarning(ex, "Error writing stream event to client");
-                    }
-                },
-                request.ConversationId,
-                cancellationToken);
-
-            logger.LogInformation("Streaming agent task completed for user {UserId}", userId);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during streaming agent task execution");
-            var errorEvent = new { type = "error", message = ex.Message };
-            var errorData = JsonSerializer.Serialize(errorEvent);
-            await context.Response.WriteAsync($"event: error\n", cancellationToken);
-            await context.Response.WriteAsync($"data: {errorData}\n\n", cancellationToken);
-        }
     }
 
     private static async Task<Results<AcceptedAtRoute<QueueTaskResponse>, BadRequest<string>, StatusCodeHttpResult>> QueueTask(

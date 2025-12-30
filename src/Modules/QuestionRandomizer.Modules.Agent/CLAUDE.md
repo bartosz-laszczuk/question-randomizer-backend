@@ -88,12 +88,31 @@ if (taskStatus?.Status == "completed")
 
 ### API Endpoints
 
+**HTTP Endpoints:**
 ```
-POST /api/agent/queue                # Queue background task
-POST /api/agent/execute              # Execute synchronously
-POST /api/agent/execute/stream       # Execute with streaming (sync)
-GET  /api/agent/tasks/{id}           # Get task status/result
+POST /api/agent/queue       # Queue task for background processing (REQUIRED for long tasks)
+POST /api/agent/execute     # Execute task synchronously (for quick tasks <30s)
+GET  /api/agent/tasks/{id}  # Get task status/result without streaming
 ```
+
+**SignalR Hub (Recommended for Real-Time Streaming):**
+```
+WS   /agentHub              # SignalR Hub for real-time task streaming
+     └─ StreamTaskUpdates(taskId) # Server-to-client stream method
+```
+
+**Which endpoint to use?**
+
+| Scenario | Endpoint | Why |
+|----------|----------|-----|
+| Long-running task (>30s) with real-time updates | `POST /queue` + SignalR `StreamTaskUpdates` | Survives timeouts, real-time progress |
+| Quick task (<30s), no streaming needed | `POST /execute` | Simple synchronous response |
+| Check task status without WebSocket | `GET /tasks/{id}` | Polling-based or final status check |
+
+**Why two steps (queue + stream)?**
+- **POST /queue** creates the task and returns taskId (Hangfire background job)
+- **SignalR StreamTaskUpdates** streams real-time updates for that taskId
+- SignalR cannot create tasks - it only streams updates for existing tasks
 
 **API Request Examples:**
 

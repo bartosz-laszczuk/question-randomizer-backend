@@ -66,65 +66,6 @@ public class AgentController : ControllerBase
     }
 
     /// <summary>
-    /// Execute an agent task with streaming progress updates
-    /// </summary>
-    /// <param name="request">Task request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>SSE stream of progress updates</returns>
-    [HttpPost("execute/stream")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task ExecuteTaskStreaming(
-        [FromBody] ExecuteTaskRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(request.Task))
-        {
-            Response.StatusCode = StatusCodes.Status400BadRequest;
-            await Response.WriteAsync("Task description is required", cancellationToken);
-            return;
-        }
-
-        var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
-
-        _logger.LogInformation(
-            "Executing streaming agent task for user {UserId} (ConversationId: {ConversationId})",
-            userId, request.ConversationId ?? "none");
-
-        // Set SSE headers
-        Response.ContentType = "text/event-stream";
-        Response.Headers.Add("Cache-Control", "no-cache");
-        Response.Headers.Add("Connection", "keep-alive");
-
-        try
-        {
-            await _agentService.ExecuteTaskStreamingAsync(
-                request.Task,
-                userId,
-                streamEvent =>
-                {
-                    // Forward stream events to client
-                    var eventData = System.Text.Json.JsonSerializer.Serialize(streamEvent);
-                    Response.WriteAsync($"event: {streamEvent.Type}\n", cancellationToken).Wait();
-                    Response.WriteAsync($"data: {eventData}\n\n", cancellationToken).Wait();
-                    Response.Body.FlushAsync(cancellationToken).Wait();
-                },
-                request.ConversationId,
-                cancellationToken);
-
-            _logger.LogInformation("Streaming agent task completed for user {UserId}", userId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during streaming agent task execution");
-            var errorEvent = new { type = "error", message = ex.Message };
-            var errorData = System.Text.Json.JsonSerializer.Serialize(errorEvent);
-            await Response.WriteAsync($"event: error\n", cancellationToken);
-            await Response.WriteAsync($"data: {errorData}\n\n", cancellationToken);
-        }
-    }
-
-    /// <summary>
     /// Queue an agent task for background processing
     /// </summary>
     /// <param name="request">Task request</param>

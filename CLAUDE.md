@@ -372,16 +372,54 @@ GET    /api/randomization/history/{id}     # Get specific randomization
 ```
 
 ### Agent Tasks
-```
-POST   /api/agent/queue           # Queue AI agent task for background processing
-POST   /api/agent/execute         # Execute agent task synchronously
-POST   /api/agent/execute/stream  # Execute agent task with streaming (sync)
-GET    /api/agent/tasks/{id}      # Get task status/result from Firestore
 
-# SignalR Hub (Recommended)
-WS     /agentHub                  # SignalR Hub for real-time streaming
+**HTTP Endpoints:**
+```
+POST   /api/agent/queue       # Queue task for background processing (REQUIRED for long tasks)
+POST   /api/agent/execute     # Execute task synchronously (for quick tasks <30s)
+GET    /api/agent/tasks/{id}  # Get task status/result without streaming
+```
+
+**SignalR Hub (Recommended for Real-Time Streaming):**
+```
+WS     /agentHub              # SignalR Hub for real-time task streaming
        └─ StreamTaskUpdates(taskId) # Server-to-client stream method
 ```
+
+**Endpoint Details:**
+
+**1. POST /api/agent/queue** - Queue Task (REQUIRED for long-running tasks)
+- **Purpose:** Creates task, adds to Hangfire queue, returns taskId
+- **Use when:** Task may take >30 seconds (agent operations, bulk updates)
+- **Returns:** `{ taskId: "task-123", message: "Task queued for processing" }`
+- **Why needed:** SignalR can only stream updates for existing tasks; this creates the task
+- **Typical flow:**
+  ```typescript
+  // Step 1: Queue task → Get taskId
+  const { taskId } = await POST('/api/agent/queue', { task: 'Update questions' });
+
+  // Step 2: Stream updates via SignalR
+  connection.stream('StreamTaskUpdates', taskId).subscribe(...)
+  ```
+
+**2. POST /api/agent/execute** - Synchronous Execution (optional)
+- **Purpose:** Execute task and wait for completion (no streaming)
+- **Use when:** Task completes quickly (<30s) and you don't need real-time updates
+- **Returns:** `{ success: true, result: "...", executionTime: 1.2 }`
+- **Simpler alternative:** No SignalR connection needed for simple tasks
+
+**3. GET /api/agent/tasks/{id}** - Get Task Status (useful for polling)
+- **Purpose:** Check task status without WebSocket connection
+- **Use when:** Polling-based clients, checking final result, debugging
+- **Returns:** `{ status: "completed", result: "...", error: null }`
+- **Note:** SignalR streaming is recommended over manual polling
+
+**4. WS /agentHub (StreamTaskUpdates)** - Real-Time Streaming (recommended)
+- **Purpose:** Stream real-time task updates via SignalR
+- **Use with:** POST /api/agent/queue (queue first, then stream)
+- **Protocol:** WebSockets → SSE → Long Polling (automatic fallback)
+- **Reconnection:** Built-in automatic reconnection with exponential backoff
+- **Events:** `started`, `status_change`, `completed`, `error`
 
 **🆕 Conversational Context Support:**
 All agent endpoints now support `conversationId` for multi-turn conversations:
