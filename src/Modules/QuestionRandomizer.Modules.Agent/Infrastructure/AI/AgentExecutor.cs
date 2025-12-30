@@ -291,6 +291,16 @@ public class AgentExecutor : IAgentExecutor
         }
     }
 
+    /// <summary>
+    /// Executes an agent task with real-time Server-Sent Events (SSE) streaming.
+    /// Uses Channel pattern to work around C# yield/try-catch limitation.
+    ///
+    /// Architecture Decision: SSE + Channels (not SignalR)
+    /// - SSE is industry standard for AI streaming (OpenAI, Anthropic)
+    /// - Simpler scaling (stateless, no Redis backplane needed)
+    /// - One-way communication is sufficient for this use case
+    /// - Channel pattern enables proper error handling with yield return
+    /// </summary>
     public async IAsyncEnumerable<AgentStreamEvent> ExecuteTaskStreamingAsync(
         string task,
         string userId,
@@ -299,37 +309,52 @@ public class AgentExecutor : IAgentExecutor
     {
         var taskId = Guid.NewGuid().ToString();
 
-        // Use Channel to work around C# yield/try-catch limitation
+        // Channel pattern: Producer-consumer queue for async streaming
+        // Needed because C# doesn't allow yield return inside try-catch blocks
         var channel = System.Threading.Channels.Channel.CreateUnbounded<AgentStreamEvent>();
 
         // Start background task that writes events to channel
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await ExecuteTaskStreamingInternalAsync(
-                    taskId, task, userId, conversationHistory, channel.Writer, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in streaming execution for task {TaskId}", taskId);
-                await channel.Writer.WriteAsync(new AgentStreamEvent
-                {
-                    Type = "error",
-                    Message = "Task failed",
-                    Output = ex.Message
-                }, cancellationToken);
-            }
-            finally
-            {
-                channel.Writer.Complete();
-            }
-        }, cancellationToken);
+        // Fire-and-forget: async method runs concurrently, no Task.Run needed (I/O-bound work)
+        _ = WriteEventsToChannelAsync(taskId, task, userId, conversationHistory, channel.Writer, cancellationToken);
 
-        // Yield events from channel (no try-catch here, so yield works!)
+        // Read from channel and yield to SSE stream
+        // No try-catch here, so yield return works correctly
         await foreach (var streamEvent in channel.Reader.ReadAllAsync(cancellationToken))
         {
             yield return streamEvent;
+        }
+    }
+
+    /// <summary>
+    /// Writes streaming events to channel with error handling
+    /// Separated to allow try-catch without yield limitation
+    /// </summary>
+    private async Task WriteEventsToChannelAsync(
+        string taskId,
+        string task,
+        string userId,
+        List<ConversationMessage>? conversationHistory,
+        System.Threading.Channels.ChannelWriter<AgentStreamEvent> writer,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ExecuteTaskStreamingInternalAsync(
+                taskId, task, userId, conversationHistory, writer, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in streaming execution for task {TaskId}", taskId);
+            await writer.WriteAsync(new AgentStreamEvent
+            {
+                Type = "error",
+                Message = "Task failed",
+                Output = ex.Message
+            }, cancellationToken);
+        }
+        finally
+        {
+            writer.Complete();
         }
     }
 

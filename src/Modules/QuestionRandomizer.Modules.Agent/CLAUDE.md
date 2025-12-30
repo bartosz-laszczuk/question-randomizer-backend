@@ -251,6 +251,32 @@ Agent Module
 5. AgentService saves agent response to conversation
 6. Client receives real-time Server-Sent Events (SSE)
 
+**Architecture Decision: Why SSE + Channels (not SignalR)?**
+
+This module uses **Server-Sent Events (SSE)** with the **Channel pattern** instead of SignalR:
+
+✅ **SSE Advantages:**
+- Industry standard for AI streaming (OpenAI ChatGPT, Anthropic Claude API)
+- One-way communication (server → client) is sufficient
+- Simpler infrastructure (stateless, no Redis backplane for scaling)
+- Native browser support (EventSource API, no JS library needed)
+- Better horizontal scaling with standard load balancers
+
+✅ **Channel Pattern:**
+- Works around C# `yield return` + `try-catch` limitation
+- Enables proper error handling in streaming methods
+- Standard .NET pattern for async producer-consumer scenarios
+- Localized complexity (isolated to AgentExecutor)
+
+❌ **SignalR Drawbacks (for this use case):**
+- Overkill for one-way streaming
+- Requires persistent WebSocket connections (stateful)
+- Needs Redis backplane for multi-server deployments
+- Larger frontend dependency (~200KB SignalR client library)
+- Two-way communication not needed
+
+**Trade-off:** Channel pattern adds code complexity but provides massive deployment simplicity and follows industry standards for AI streaming.
+
 ---
 
 ## 🆕 Conversational Context

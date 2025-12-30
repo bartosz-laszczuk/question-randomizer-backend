@@ -51,7 +51,8 @@
       "Bash(npx tsc:*)",
       "Bash(npx nx serve:*)",
       "Bash(npm install:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(Select-String -Pattern \"error|warning|succeeded\")"
     ],
     "deny": [],
     "ask": []

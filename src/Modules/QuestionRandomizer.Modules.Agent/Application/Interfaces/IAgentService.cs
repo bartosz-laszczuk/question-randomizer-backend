@@ -1,6 +1,5 @@
 namespace QuestionRandomizer.Modules.Agent.Application.Interfaces;
 
-using System.Runtime.CompilerServices;
 using QuestionRandomizer.Modules.Agent.Application.DTOs;
 
 /// <summary>
@@ -20,5 +19,5 @@ public interface IAgentService
         string task,
         string userId,
         string? conversationId = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default);
 }
