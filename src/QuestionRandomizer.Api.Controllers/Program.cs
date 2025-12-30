@@ -14,12 +14,16 @@ using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel for long-lived streaming connections (ChatGPT-like behavior)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5);
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(5);
+});
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-// Add SignalR for real-time streaming
-builder.Services.AddSignalR();
 
 // Only add Swagger in Development environment (not Testing)
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -154,9 +158,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
-
-// Map SignalR Hub
-app.MapHub<QuestionRandomizer.Modules.Agent.Infrastructure.Hubs.AgentHub>("/agentHub");
 
 app.Run();
 

@@ -1,5 +1,6 @@
 namespace QuestionRandomizer.Api.Controllers.Controllers;
 
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Controller for AI Agent task execution
+/// Controller for AI Agent task execution with real-time streaming
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -27,133 +28,42 @@ public class AgentController : ControllerBase
     }
 
     /// <summary>
-    /// Execute an agent task synchronously
+    /// Execute an agent task with real-time streaming (ChatGPT-like behavior)
+    /// Returns Server-Sent Events stream with task progress
     /// </summary>
     /// <param name="request">Task request</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Task result</returns>
+    /// <returns>Stream of agent execution events</returns>
     [HttpPost("execute")]
-    [ProducesResponseType(typeof(AgentTaskResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IAsyncEnumerable<AgentStreamEvent>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AgentTaskResult>> ExecuteTask(
+    public async IAsyncEnumerable<AgentStreamEvent> ExecuteTask(
         [FromBody] ExecuteTaskRequest request,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Task))
         {
-            return BadRequest("Task description is required");
+            yield return new AgentStreamEvent
+            {
+                Type = "error",
+                Message = "Task description is required"
+            };
+            yield break;
         }
 
         var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
 
         _logger.LogInformation(
-            "Executing agent task for user {UserId} (ConversationId: {ConversationId})",
+            "Starting streaming execution for user {UserId} (ConversationId: {ConversationId})",
             userId, request.ConversationId ?? "none");
 
-        var result = await _agentService.ExecuteTaskAsync(
+        await foreach (var streamEvent in _agentService.ExecuteTaskStreamingAsync(
             request.Task,
             userId,
             request.ConversationId,
-            cancellationToken);
-
-        if (!result.Success)
+            cancellationToken))
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, result);
-        }
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Queue an agent task for background processing
-    /// </summary>
-    /// <param name="request">Task request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Task ID for tracking</returns>
-    [HttpPost("queue")]
-    [ProducesResponseType(typeof(QueueTaskResponse), StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<QueueTaskResponse>> QueueTask(
-        [FromBody] ExecuteTaskRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(request.Task))
-        {
-            return BadRequest("Task description is required");
-        }
-
-        var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
-
-        _logger.LogInformation(
-            "Queueing agent task for user {UserId} (ConversationId: {ConversationId})",
-            userId, request.ConversationId ?? "none");
-
-        try
-        {
-            var taskId = await _agentService.QueueTaskAsync(
-                request.Task,
-                userId,
-                request.ConversationId,
-                cancellationToken);
-
-            _logger.LogInformation("Agent task queued with ID {TaskId}", taskId);
-
-            return Accepted(new QueueTaskResponse
-            {
-                TaskId = taskId,
-                Message = "Task queued for processing"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error queueing agent task");
-            return StatusCode(StatusCodes.Status500InternalServerError, new
-            {
-                Error = "Failed to queue task",
-                Details = ex.Message
-            });
-        }
-    }
-
-    /// <summary>
-    /// Get the status of a queued agent task
-    /// </summary>
-    /// <param name="taskId">Task ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Task status</returns>
-    [HttpGet("tasks/{taskId}")]
-    [ProducesResponseType(typeof(AgentTaskStatus), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AgentTaskStatus>> GetTaskStatus(
-        [FromRoute] string taskId,
-        CancellationToken cancellationToken)
-    {
-        var userId = User.Identity?.Name ?? throw new UnauthorizedAccessException("User not authenticated");
-
-        _logger.LogInformation("Getting task status for {TaskId}, user {UserId}", taskId, userId);
-
-        try
-        {
-            var status = await _agentService.GetTaskStatusAsync(taskId, userId, cancellationToken);
-
-            if (status.Status == "unknown")
-            {
-                return NotFound(new { Error = "Task not found", TaskId = taskId });
-            }
-
-            return Ok(status);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting task status for {TaskId}", taskId);
-            return StatusCode(StatusCodes.Status500InternalServerError, new
-            {
-                Error = "Failed to get task status",
-                Details = ex.Message
-            });
+            yield return streamEvent;
         }
     }
 }
@@ -165,13 +75,4 @@ public record ExecuteTaskRequest
 {
     public string Task { get; init; } = string.Empty;
     public string? ConversationId { get; init; }
-}
-
-/// <summary>
-/// Response model for queuing a task
-/// </summary>
-public record QueueTaskResponse
-{
-    public string TaskId { get; init; } = string.Empty;
-    public string Message { get; init; } = string.Empty;
 }

@@ -2,8 +2,8 @@
 
 **Module:** QuestionRandomizer.Modules.Agent
 **Purpose:** Integrated AI agent with autonomous task execution
-**Technology:** C# + Anthropic SDK + Hangfire + Firestore
-**Last Updated:** 2025-12-27
+**Technology:** C# + Anthropic SDK + Firestore
+**Last Updated:** 2025-12-30
 
 ---
 
@@ -26,15 +26,14 @@ AFTER:  Frontend → Backend (with integrated Agent Module)
 ```
 
 **Key Features:**
-- **🆕 Conversational Context** - Multi-turn conversations with full history
+- **Conversational Context** - Multi-turn conversations with full history
+- **Real-time Streaming** - ChatGPT-like streaming execution (SSE)
 - 15 specialized tools (6 retrieval, 7 modification, 2 analysis)
-- Background processing with Hangfire
-- Firestore persistence for task status/results & conversations
-- Automatic retry with exponential backoff (5s, 15s, 30s)
-- Timeout protection (default: 120s)
+- Firestore persistence for conversations & messages
+- Timeout protection (default: 300s / 5 minutes)
 - Secure user data isolation
 
-**Module Stats:** 35 C# files, 4 key components (AgentExecutor, ToolRegistry, TaskQueueService, AgentTaskRepository)
+**Module Stats:** Clean & minimal - AgentExecutor, ToolRegistry, AgentService, 15 tools
 
 ---
 
@@ -43,180 +42,174 @@ AFTER:  Frontend → Backend (with integrated Agent Module)
 ### One-Shot Task (No Conversation)
 
 ```csharp
-// In your controller/handler
-var taskId = await _taskQueueService.QueueTaskAsync(
+// In your controller/handler - Stream execution events
+await foreach (var streamEvent in _agentService.ExecuteTaskStreamingAsync(
     task: "Categorize all uncategorized questions about JavaScript",
     userId: currentUserId,
     conversationId: null,  // Creates new conversation
-    cancellationToken
-);
-// Returns immediately with taskId
+    cancellationToken))
+{
+    // Handle real-time events
+    switch (streamEvent.Type)
+    {
+        case "started":
+            Console.WriteLine("Task started...");
+            break;
+        case "thinking":
+            Console.WriteLine("Agent is thinking...");
+            break;
+        case "text_chunk":
+            Console.Write(streamEvent.Content);  // Stream response text
+            break;
+        case "tool_call":
+            Console.WriteLine($"Calling tool: {streamEvent.ToolName}");
+            break;
+        case "completed":
+            Console.WriteLine($"\nCompleted: {streamEvent.Content}");
+            break;
+        case "error":
+            Console.WriteLine($"Error: {streamEvent.Message}");
+            break;
+    }
+}
 ```
 
 ### 🆕 Conversational Task (With Context)
 
 ```csharp
 // Turn 1: Start conversation
-var taskId1 = await _taskQueueService.QueueTaskAsync(
+await foreach (var event in _agentService.ExecuteTaskStreamingAsync(
     task: "Update all uncategorized questions",
     userId: currentUserId,
     conversationId: null,  // Creates conversation "conv-123"
-    cancellationToken
-);
+    cancellationToken))
+{
+    HandleStreamEvent(event);
+}
 
 // Turn 2: Continue conversation (agent remembers Turn 1!)
-var taskId2 = await _taskQueueService.QueueTaskAsync(
+await foreach (var event in _agentService.ExecuteTaskStreamingAsync(
     task: "Provide me the ids of all updated questions",
     userId: currentUserId,
     conversationId: "conv-123",  // Uses conversation history
-    cancellationToken
-);
+    cancellationToken))
+{
+    HandleStreamEvent(event);
+}
 // Agent will know which questions were updated in Turn 1!
 ```
 
-### Check Status
+### API Endpoint
 
-```csharp
-var taskStatus = await _taskQueueService.GetTaskWithUserIdAsync(
-    taskId, userId, cancellationToken);
-
-if (taskStatus?.Status == "completed")
-{
-    var result = taskStatus.Result;
-}
+**HTTP Streaming Endpoint:**
+```
+POST /api/agent/execute     # Execute task with real-time streaming (SSE)
 ```
 
-### API Endpoints
-
-**HTTP Endpoints:**
-```
-POST /api/agent/queue       # Queue task for background processing (REQUIRED for long tasks)
-POST /api/agent/execute     # Execute task synchronously (for quick tasks <30s)
-GET  /api/agent/tasks/{id}  # Get task status/result without streaming
-```
-
-**SignalR Hub (Recommended for Real-Time Streaming):**
-```
-WS   /agentHub              # SignalR Hub for real-time task streaming
-     └─ StreamTaskUpdates(taskId) # Server-to-client stream method
-```
-
-**Which endpoint to use?**
-
-| Scenario | Endpoint | Why |
-|----------|----------|-----|
-| Long-running task (>30s) with real-time updates | `POST /queue` + SignalR `StreamTaskUpdates` | Survives timeouts, real-time progress |
-| Quick task (<30s), no streaming needed | `POST /execute` | Simple synchronous response |
-| Check task status without WebSocket | `GET /tasks/{id}` | Polling-based or final status check |
-
-**Why two steps (queue + stream)?**
-- **POST /queue** creates the task and returns taskId (Hangfire background job)
-- **SignalR StreamTaskUpdates** streams real-time updates for that taskId
-- SignalR cannot create tasks - it only streams updates for existing tasks
-
-**API Request Examples:**
-
+**Request:**
 ```json
-// New conversation
-POST /api/agent/queue
 {
-  "task": "Update all uncategorized questions"
-}
-
-// Continue conversation
-POST /api/agent/queue
-{
-  "task": "Provide the ids",
-  "conversationId": "conv-123"
+  "task": "Update all uncategorized questions",
+  "conversationId": null  // Optional - for multi-turn conversations
 }
 ```
 
-**🆕 Real-time Streaming with SignalR (Recommended for Chat UIs):**
-
-```bash
-# Install SignalR client
-npm install @microsoft/signalr
-```
-
-```typescript
-import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
-
-// Queue task
-const { taskId } = await fetch('/api/agent/queue', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ task: 'Update all uncategorized questions' })
-}).then(r => r.json());
-
-// Create SignalR connection
-const connection: HubConnection = new HubConnectionBuilder()
-  .withUrl('http://localhost:5000/agentHub', {
-    accessTokenFactory: async () => {
-      // Return your Firebase auth token
-      return await getAuthToken();
-    }
-  })
-  .withAutomaticReconnect({
-    nextRetryDelayInMilliseconds: (retryContext) => {
-      // Exponential backoff: 1s, 2s, 4s, 8s, max 10s
-      return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 10000);
-    }
-  })
-  .build();
-
-// Handle reconnection events (optional)
-connection.onreconnecting(() => console.log('[SignalR] Reconnecting...'));
-connection.onreconnected(() => console.log('[SignalR] Reconnected!'));
-connection.onclose((error) => console.log('[SignalR] Connection closed', error));
-
-// Start connection
-await connection.start();
-console.log('[SignalR] Connected successfully');
-
-// Subscribe to task updates stream
-connection.stream<AgentStreamEvent>('StreamTaskUpdates', taskId).subscribe({
-  next: (event) => {
-    console.log('Event:', event.type, event.message);
-    // Handle different event types
-    switch (event.type) {
-      case 'started':
-        console.log('Task started...');
-        break;
-      case 'status_change':
-        console.log('Status:', event.output);
-        break;
-      case 'completed':
-        console.log('Result:', event.content);
-        break;
-      case 'error':
-        console.error('Error:', event.message);
-        break;
-    }
-  },
-  complete: () => {
-    console.log('Stream completed');
-    connection.stop();
-  },
-  error: (err) => {
-    console.error('Stream error:', err);
-    connection.stop();
-  }
-});
-```
+**Response:** Server-Sent Events (SSE) stream with AgentStreamEvent objects
 
 **Stream Event Types:**
-- `started` - Stream initialized, task queued
-- `status_change` - Status updated (queued → processing → completed/failed)
-- `completed` - Task finished successfully (includes result)
-- `error` - Task failed or not found (includes error message)
-- `heartbeat` - Keep-alive ping (connection health check)
+- `started` - Task execution started
+- `thinking` - Agent is analyzing/planning
+- `text_chunk` - Streaming response text (ChatGPT-like)
+- `tool_call` - Agent calling a tool
+- `tool_result` - Tool execution completed
+- `completed` - Task finished successfully
+- `error` - Task failed with error
 
-**Why SignalR?**
-- ✅ **Auto-reconnection** - Built-in exponential backoff (no manual implementation)
-- ✅ **Protocol negotiation** - Tries WebSockets → SSE → Long Polling automatically
-- ✅ **Simpler code** - ~80 lines vs ~250 with manual SSE implementation
-- ✅ **Better reliability** - Battle-tested by Microsoft, handles edge cases
-- ✅ **TypeScript support** - Full type safety with generics
+### Frontend Example (Fetch API + SSE)
+
+```typescript
+// Execute task with streaming
+const response = await fetch('http://localhost:5000/api/agent/execute', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${firebaseToken}`
+  },
+  body: JSON.stringify({
+    task: 'Categorize all uncategorized questions',
+    conversationId: null  // or "conv-123" for continuation
+  })
+});
+
+// Read SSE stream
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+let buffer = '';
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  buffer += decoder.decode(value, { stream: true });
+  const lines = buffer.split('\n');
+  buffer = lines.pop() || '';
+
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const event = JSON.parse(line.slice(6));
+
+      switch (event.type) {
+        case 'started':
+          console.log('Started...');
+          break;
+        case 'text_chunk':
+          process.stdout.write(event.content);  // Stream like ChatGPT
+          break;
+        case 'tool_call':
+          console.log(`\nCalling: ${event.toolName}`);
+          break;
+        case 'completed':
+          console.log('\nCompleted!');
+          break;
+        case 'error':
+          console.error('Error:', event.message);
+          break;
+      }
+    }
+  }
+}
+```
+
+### Conversational Context Example
+
+```typescript
+// Turn 1: Start new conversation
+const response1 = await executeTask({
+  task: 'Update all uncategorized questions'
+});
+// Response includes conversationId: "conv-123"
+
+// Turn 2: Continue conversation (agent remembers context!)
+const response2 = await executeTask({
+  task: 'Provide me the ids',
+  conversationId: 'conv-123'
+});
+// Agent knows which questions were updated in Turn 1
+
+// Turn 3: Further refinement
+const response3 = await executeTask({
+  task: 'Delete the first 3',
+  conversationId: 'conv-123'
+});
+// Agent knows the exact IDs from Turn 2
+```
+
+**Benefits:**
+- ✅ **ChatGPT-like streaming** - Real-time text chunks
+- ✅ **5-minute timeout** - Long-running tasks supported
+- ✅ **Conversational context** - Multi-turn conversations
+- ✅ **Simple HTTP** - No WebSocket complexity
+- ✅ **Automatic reconnection** - Client-side retry logic
 
 ---
 
@@ -224,45 +217,39 @@ connection.stream<AgentStreamEvent>('StreamTaskUpdates', taskId).subscribe({
 
 ```
 Agent Module
-├── Domain
-│   └── AgentTask              # Task entity (status, result, metadata)
-│
 ├── Application
-│   ├── Interfaces             # IAgentExecutor, IAgentTaskRepository, ITaskQueueService
+│   ├── DTOs
+│   │   ├── ExecuteTaskRequest   # API request model
+│   │   └── AgentStreamEvent     # Streaming event model
+│   ├── Interfaces
+│   │   ├── IAgentExecutor       # Core agent execution interface
+│   │   └── IAgentService        # High-level service interface
 │   └── Tools (15 total)
-│       ├── DataRetrieval (6)  # Get questions, categories, search, etc.
+│       ├── DataRetrieval (6)    # Get questions, categories, search, etc.
 │       ├── DataModification (7) # Create, update, delete, batch ops
-│       └── DataAnalysis (2)   # Find duplicates, analyze difficulty
+│       └── DataAnalysis (2)     # Find duplicates, analyze difficulty
 │
 └── Infrastructure
     ├── AI
-    │   ├── AgentExecutor      # Claude SDK integration, tool calling loop
-    │   └── AgentConfiguration # Model, temperature, timeout settings
-    ├── Hubs
-    │   └── AgentHub           # 🆕 SignalR Hub for real-time streaming
-    ├── Queue
-    │   ├── TaskQueueService   # Hangfire queue management
-    │   └── AgentTaskProcessor # Background worker with retry
-    └── Repositories
-        └── AgentTaskRepository # Firestore persistence
+    │   ├── AgentExecutor        # Claude SDK integration, streaming loop
+    │   └── AgentConfiguration   # Model, temperature, timeout settings
+    └── Services
+        └── AgentService         # Conversation context + streaming orchestration
 ```
 
-**SignalR Hub Endpoint:**
-- **URL:** `/agentHub` (both Controllers and Minimal API)
-- **Method:** `StreamTaskUpdates(taskId)` - Server-to-client streaming
-- **Protocol:** WebSockets (falls back to SSE, then Long Polling)
-- **Authentication:** Firebase JWT via `accessTokenFactory`
-
-**Flow:**
-1. User queues task → TaskQueueService
-2. Hangfire picks up job → AgentTaskProcessor
-3. **🆕 Load conversation history** (if conversationId provided)
-4. **🆕 Save user message** to conversation
-5. AgentExecutor runs agent loop with Claude API + conversation context
-6. Tools called autonomously based on task
-7. **🆕 Save agent response** to conversation
-8. Result/error stored in Firestore
-9. User retrieves result via API
+**Streaming Flow:**
+1. Client sends POST /api/agent/execute
+2. AgentService loads conversation history (if conversationId provided)
+3. AgentService saves user message to conversation
+4. AgentExecutor runs streaming agent loop:
+   - Streams "started" event
+   - Streams "thinking" events during analysis
+   - Streams "text_chunk" events for response text (ChatGPT-like)
+   - Streams "tool_call" + "tool_result" events when using tools
+   - Tools called autonomously based on task
+   - Streams "completed" event with final result
+5. AgentService saves agent response to conversation
+6. Client receives real-time Server-Sent Events (SSE)
 
 ---
 
@@ -391,7 +378,7 @@ messages/                   # Conversation messages
 | `Temperature` | `0` | Response randomness (0 = deterministic) |
 | `MaxIterations` | `20` | Max agent loop iterations |
 | `MaxTokens` | `4096` | Max response tokens |
-| `TimeoutSeconds` | `120` | Execution timeout (2 min) |
+| `TimeoutSeconds` | `300` | Execution timeout (5 min) |
 
 **appsettings.json:**
 ```json
@@ -402,7 +389,7 @@ messages/                   # Conversation messages
     "Temperature": 0,
     "MaxIterations": 20,
     "MaxTokens": 4096,
-    "TimeoutSeconds": 120
+    "TimeoutSeconds": 300
   }
 }
 ```
@@ -416,40 +403,6 @@ messages/                   # Conversation messages
 - **0** (recommended) - Deterministic for data operations
 - **0.3-0.5** - Slight creativity for analysis
 - **0.7-1.0** - Creative (not recommended for data ops)
-
----
-
-## Background Processing
-
-**Task Lifecycle:**
-```
-pending → processing → completed/failed
-```
-
-**Hangfire Retry:**
-- Attempt 1: Immediate
-- Attempt 2: After 5 seconds
-- Attempt 3: After 15 seconds
-- Attempt 4: After 30 seconds
-- After 4 failures: Task marked as failed
-
-**Timeout Protection:**
-- Wraps execution with configurable timeout
-- Prevents hanging tasks
-- Returns error if exceeded
-
-**Firestore Collection:** `agent_tasks`
-```json
-{
-  "taskId": "guid",
-  "userId": "user-123",
-  "taskDescription": "Categorize questions...",
-  "status": "completed",
-  "result": "Successfully categorized...",
-  "createdAt": "2025-12-27T10:00:00Z",
-  "completedAt": "2025-12-27T10:00:45Z"
-}
-```
 
 ---
 
@@ -568,10 +521,10 @@ public async Task Agent_ExecutesTask_Successfully()
 | Issue | Solution |
 |-------|----------|
 | "Tool not found" | Check DI registration in `AgentModuleExtensions.cs` |
-| "Task timeout" | Increase `TimeoutSeconds` in configuration |
+| "Task timeout" | Increase `TimeoutSeconds` in configuration (default: 300s) |
 | "API key required" | Set `Anthropic:ApiKey` in `appsettings.json` |
 | "Max iterations" | Increase `MaxIterations` or simplify task |
-| Jobs not processing | Verify Hangfire server running, check `WorkerCount` |
+| Stream disconnects | Check Kestrel timeout settings (KeepAliveTimeout, RequestHeadersTimeout) |
 
 **Enable Debug Logging:**
 ```json
@@ -627,10 +580,8 @@ public async Task Agent_ExecutesTask_Successfully()
 **External:**
 - [Anthropic SDK](https://github.com/Anthropic/anthropic-sdk-dotnet)
 - [Claude API Docs](https://docs.anthropic.com/)
-- [Hangfire Docs](https://www.hangfire.io/)
 
 ---
 
-**Last Updated:** 2025-12-27
-**Status:** Production Ready (Phase 3 Complete)
-**Lines:** ~230 (Optimized from 1,568)
+**Last Updated:** 2025-12-30
+**Status:** Production Ready - Clean streaming implementation

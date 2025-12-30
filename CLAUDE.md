@@ -53,9 +53,9 @@ This backend is part of a 2-service architecture:
 **Agent Integration:** The AI Agent is now integrated as a module within the C# Backend:
 - **Agent Module** - Autonomous AI task execution using Claude SDK
 - **15 Agent Tools** - Direct Firestore access for data operations
-- **Hangfire** - Background task processing with retry logic
-- **Queue-based execution** - POST /api/agent/queue for async tasks
-- **Status tracking** - Firestore-backed task status persistence
+- **Real-time Streaming** - ChatGPT-like streaming execution with SSE
+- **5-minute timeout** - Supports long-running tasks
+- **Conversation context** - Multi-turn conversations with history
 
 ---
 
@@ -86,7 +86,7 @@ This backend is part of a 2-service architecture:
 - **Questions Module** (36 files) - Question, Category, Qualification management
 - **Conversations Module** (28 files) - Conversation and message management
 - **Randomization Module** (42 files) - Question randomization, session management
-- **Agent Module** (71 files) - Integrated AI agent with 15 tools, Hangfire queue, Firestore persistence
+- **Agent Module** (Clean, minimal) - Integrated AI agent with 15 tools, real-time streaming
 
 **Rationale:**
 - **Learning Purpose:** Demonstrate modular monolith architecture
@@ -371,117 +371,90 @@ GET    /api/randomization/history          # Get randomization history
 GET    /api/randomization/history/{id}     # Get specific randomization
 ```
 
-### Agent Tasks
+### Agent
 
-**HTTP Endpoints:**
 ```
-POST   /api/agent/queue       # Queue task for background processing (REQUIRED for long tasks)
-POST   /api/agent/execute     # Execute task synchronously (for quick tasks <30s)
-GET    /api/agent/tasks/{id}  # Get task status/result without streaming
+POST   /api/agent/execute     # Execute AI task with real-time streaming
 ```
 
-**SignalR Hub (Recommended for Real-Time Streaming):**
-```
-WS     /agentHub              # SignalR Hub for real-time task streaming
-       └─ StreamTaskUpdates(taskId) # Server-to-client stream method
-```
+**Real-Time Streaming:**
+Execute AI agent tasks with ChatGPT-like streaming experience. See events as they happen: thinking, tool calls, and text generation in real-time.
 
-**Endpoint Details:**
-
-**1. POST /api/agent/queue** - Queue Task (REQUIRED for long-running tasks)
-- **Purpose:** Creates task, adds to Hangfire queue, returns taskId
-- **Use when:** Task may take >30 seconds (agent operations, bulk updates)
-- **Returns:** `{ taskId: "task-123", message: "Task queued for processing" }`
-- **Why needed:** SignalR can only stream updates for existing tasks; this creates the task
-- **Typical flow:**
-  ```typescript
-  // Step 1: Queue task → Get taskId
-  const { taskId } = await POST('/api/agent/queue', { task: 'Update questions' });
-
-  // Step 2: Stream updates via SignalR
-  connection.stream('StreamTaskUpdates', taskId).subscribe(...)
-  ```
-
-**2. POST /api/agent/execute** - Synchronous Execution (optional)
-- **Purpose:** Execute task and wait for completion (no streaming)
-- **Use when:** Task completes quickly (<30s) and you don't need real-time updates
-- **Returns:** `{ success: true, result: "...", executionTime: 1.2 }`
-- **Simpler alternative:** No SignalR connection needed for simple tasks
-
-**3. GET /api/agent/tasks/{id}** - Get Task Status (useful for polling)
-- **Purpose:** Check task status without WebSocket connection
-- **Use when:** Polling-based clients, checking final result, debugging
-- **Returns:** `{ status: "completed", result: "...", error: null }`
-- **Note:** SignalR streaming is recommended over manual polling
-
-**4. WS /agentHub (StreamTaskUpdates)** - Real-Time Streaming (recommended)
-- **Purpose:** Stream real-time task updates via SignalR
-- **Use with:** POST /api/agent/queue (queue first, then stream)
-- **Protocol:** WebSockets → SSE → Long Polling (automatic fallback)
-- **Reconnection:** Built-in automatic reconnection with exponential backoff
-- **Events:** `started`, `status_change`, `completed`, `error`
-
-**🆕 Conversational Context Support:**
-All agent endpoints now support `conversationId` for multi-turn conversations:
+**Request:**
 ```json
-// New conversation (creates automatically)
-POST /api/agent/queue
 {
-  "task": "Update all uncategorized questions"
-}
-
-// Continue conversation (agent remembers context!)
-POST /api/agent/queue
-{
-  "task": "Provide me the ids of all updated questions",
-  "conversationId": "conv-123"
+  "task": "Categorize all JavaScript questions",
+  "conversationId": "conv-123"  // Optional: for multi-turn conversations
 }
 ```
 
-**Agent Features:**
-- **🆕 Conversational Context** - Multi-turn conversations with full history retention
-- **🆕 Real-time Streaming** - SignalR-based streaming for queued tasks (no polling needed!)
-- **Integration** - Seamlessly integrates with Conversations Module for message persistence
-- **Automatic retry** - 3 attempts, exponential backoff (5s, 15s, 30s)
-- **Timeout protection** - Configurable, default: 120 seconds
-- **Firestore-backed tracking** - Status: pending → processing → completed/failed
-- **15 specialized tools** - Autonomous task execution with direct Firestore access
+**Response:** Server-Sent Events (SSE) stream with real-time updates
 
-**Real-time Streaming with SignalR (Recommended):**
+**Event Types:**
+- `started` - Task begins
+- `thinking` - Agent iteration progress
+- `text_chunk` - Text generated in real-time
+- `tool_call` - Tool being called (with name + input)
+- `tool_result` - Tool execution completed (with result)
+- `completed` - Task finished successfully
+- `error` - Task failed
+
+**Example (Fetch API with SSE):**
 ```typescript
-// Install SignalR client: npm install @microsoft/signalr
-import { HubConnectionBuilder } from '@microsoft/signalr';
-
-// Queue task
-const { taskId } = await fetch('/api/agent/queue', {
+const response = await fetch('/api/agent/execute', {
   method: 'POST',
-  body: JSON.stringify({ task: 'Update all questions' })
-}).then(r => r.json());
-
-// Connect to SignalR Hub
-const connection = new HubConnectionBuilder()
-  .withUrl('/agentHub', {
-    accessTokenFactory: () => getAuthToken()
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    task: 'Categorize all JavaScript questions',
+    conversationId: 'conv-123'  // Optional
   })
-  .withAutomaticReconnect()
-  .build();
-
-await connection.start();
-
-// Subscribe to real-time stream
-connection.stream('StreamTaskUpdates', taskId).subscribe({
-  next: (event) => console.log('Event:', event.type, event.message),
-  complete: () => console.log('Task completed!'),
-  error: (err) => console.error('Error:', err)
 });
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const chunk = decoder.decode(value);
+  const events = chunk.split('\n\n').filter(e => e.trim());
+
+  for (const eventData of events) {
+    const event = JSON.parse(eventData.replace('data: ', ''));
+
+    if (event.type === 'text_chunk') {
+      displayText(event.content);  // Show text as it's generated!
+    }
+  }
+}
 ```
 
-**Benefits:**
-- ✅ No HTTP timeout risk (task queued in background)
-- ✅ Real-time updates via SignalR (WebSockets/SSE, no polling)
-- ✅ Built-in automatic reconnection with exponential backoff
-- ✅ Protocol negotiation (WebSockets → SSE → Long Polling)
-- ✅ Simpler code (~80 lines vs ~250 with manual SSE)
+**Conversational Context:**
+Multi-turn conversations with full history retention. The agent remembers previous exchanges:
+
+```typescript
+// Turn 1: Initial request
+await execute({ task: "Update all uncategorized questions" });
+// → Creates conversation, returns: "Updated 15 questions: q-1, q-2..."
+
+// Turn 2: Follow-up (agent remembers Turn 1!)
+await execute({
+  task: "Provide me the ids",
+  conversationId: "conv-123"
+});
+// → Agent knows which questions: "The IDs are: q-1, q-2, q-3..."
+```
+
+**Features:**
+- **Real-time streaming** - ChatGPT-like text generation
+- **Conversational context** - Multi-turn conversations with memory
+- **5-minute timeout** - Handles long-running tasks
+- **15 specialized tools** - Autonomous task execution
+- **Firestore integration** - Persistent conversation history
 
 ### Health
 ```

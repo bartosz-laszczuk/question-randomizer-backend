@@ -1,6 +1,5 @@
 namespace QuestionRandomizer.Modules.Agent;
 
-using Hangfire;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QuestionRandomizer.Modules.Agent.Application.Interfaces;
@@ -10,10 +9,10 @@ using QuestionRandomizer.Modules.Agent.Application.Tools.DataAnalysis;
 using QuestionRandomizer.Modules.Agent.Application.Tools.DataModification;
 using QuestionRandomizer.Modules.Agent.Application.Tools.DataRetrieval;
 using QuestionRandomizer.Modules.Agent.Infrastructure.AI;
-using QuestionRandomizer.Modules.Agent.Infrastructure.Queue;
 
 /// <summary>
 /// Extension methods for registering the Agent module services
+/// Clean, minimal streaming-only implementation
 /// </summary>
 public static class AgentModuleExtensions
 {
@@ -29,13 +28,12 @@ public static class AgentModuleExtensions
             options.MaxIterations = int.Parse(configuration["Anthropic:MaxIterations"] ?? "20");
             options.Temperature = double.Parse(configuration["Anthropic:Temperature"] ?? "0");
             options.MaxTokens = int.Parse(configuration["Anthropic:MaxTokens"] ?? "4096");
-            options.TimeoutSeconds = int.Parse(configuration["Anthropic:TimeoutSeconds"] ?? "120");
+            options.TimeoutSeconds = int.Parse(configuration["Anthropic:TimeoutSeconds"] ?? "300"); // 5 minutes for streaming
         });
 
         // Register core agent services
         services.AddScoped<IAgentExecutor, AgentExecutor>();
         services.AddScoped<IAgentService, Infrastructure.Services.AgentService>();
-        services.AddScoped<IAgentTaskRepository, Infrastructure.Repositories.AgentTaskRepository>();
 
         // Register all 15 agent tools
         // Data Retrieval Tools (6)
@@ -61,22 +59,6 @@ public static class AgentModuleExtensions
 
         // Register tool registry
         services.AddScoped<ToolRegistry>();
-
-        // Register background job services
-        services.AddScoped<ITaskQueueService, TaskQueueService>();
-        services.AddScoped<AgentTaskProcessor>();
-
-        // Configure Hangfire for background job processing
-        services.AddHangfire(config => config
-            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-            .UseSimpleAssemblyNameTypeSerializer()
-            .UseRecommendedSerializerSettings()
-            .UseInMemoryStorage());
-
-        services.AddHangfireServer(options =>
-        {
-            options.WorkerCount = int.Parse(configuration["Hangfire:WorkerCount"] ?? "2");
-        });
 
         return services;
     }

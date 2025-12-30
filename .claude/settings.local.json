@@ -50,7 +50,8 @@
       "Bash(timeout 60 npx nx serve:*)",
       "Bash(npx tsc:*)",
       "Bash(npx nx serve:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

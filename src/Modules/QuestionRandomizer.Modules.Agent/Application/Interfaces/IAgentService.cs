@@ -1,58 +1,24 @@
 namespace QuestionRandomizer.Modules.Agent.Application.Interfaces;
 
+using System.Runtime.CompilerServices;
 using QuestionRandomizer.Modules.Agent.Application.DTOs;
 
 /// <summary>
-/// Service for executing AI agent tasks
+/// Service for executing AI agent tasks with real-time streaming
 /// </summary>
 public interface IAgentService
 {
     /// <summary>
-    /// Executes an agent task synchronously (waits for completion)
+    /// Executes an agent task with real-time streaming (ChatGPT-like behavior)
     /// </summary>
     /// <param name="task">The task description for the agent</param>
     /// <param name="userId">The user ID making the request</param>
     /// <param name="conversationId">Optional conversation ID for context continuity</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Result of the agent task execution</returns>
-    Task<AgentTaskResult> ExecuteTaskAsync(
+    /// <returns>Async stream of agent execution events (text chunks, tool calls, etc.)</returns>
+    IAsyncEnumerable<AgentStreamEvent> ExecuteTaskStreamingAsync(
         string task,
         string userId,
         string? conversationId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Queues an agent task for background processing
-    /// </summary>
-    /// <param name="task">The task description for the agent</param>
-    /// <param name="userId">The user ID making the request</param>
-    /// <param name="conversationId">Optional conversation ID for context continuity</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Task ID for tracking</returns>
-    Task<string> QueueTaskAsync(
-        string task,
-        string userId,
-        string? conversationId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the status of a queued agent task
-    /// </summary>
-    /// <param name="taskId">The task ID</param>
-    /// <param name="userId">The user ID for security filtering</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Status of the task</returns>
-    Task<AgentTaskStatus> GetTaskStatusAsync(string taskId, string userId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Streams real-time updates for a queued agent task
-    /// </summary>
-    /// <param name="taskId">The task ID</param>
-    /// <param name="userId">The user ID for security filtering</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Async stream of task update events</returns>
-    IAsyncEnumerable<AgentStreamEvent> StreamTaskUpdatesAsync(
-        string taskId,
-        string userId,
-        CancellationToken cancellationToken = default);
+        [EnumeratorCancellation] CancellationToken cancellationToken = default);
 }

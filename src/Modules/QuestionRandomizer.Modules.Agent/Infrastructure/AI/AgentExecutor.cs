@@ -299,37 +299,282 @@ public class AgentExecutor : IAgentExecutor
     {
         var taskId = Guid.NewGuid().ToString();
 
-        yield return new AgentStreamEvent
+        // Use Channel to work around C# yield/try-catch limitation
+        var channel = System.Threading.Channels.Channel.CreateUnbounded<AgentStreamEvent>();
+
+        // Start background task that writes events to channel
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await ExecuteTaskStreamingInternalAsync(
+                    taskId, task, userId, conversationHistory, channel.Writer, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in streaming execution for task {TaskId}", taskId);
+                await channel.Writer.WriteAsync(new AgentStreamEvent
+                {
+                    Type = "error",
+                    Message = "Task failed",
+                    Output = ex.Message
+                }, cancellationToken);
+            }
+            finally
+            {
+                channel.Writer.Complete();
+            }
+        }, cancellationToken);
+
+        // Yield events from channel (no try-catch here, so yield works!)
+        await foreach (var streamEvent in channel.Reader.ReadAllAsync(cancellationToken))
+        {
+            yield return streamEvent;
+        }
+    }
+
+    /// <summary>
+    /// Internal streaming execution that writes events to channel (can use try-catch)
+    /// </summary>
+    private async Task ExecuteTaskStreamingInternalAsync(
+        string taskId,
+        string task,
+        string userId,
+        List<ConversationMessage>? conversationHistory,
+        System.Threading.Channels.ChannelWriter<AgentStreamEvent> writer,
+        CancellationToken cancellationToken)
+    {
+        // Emit started event
+        await writer.WriteAsync(new AgentStreamEvent
         {
             Type = "started",
             Message = $"Started task {taskId}"
-        };
+        }, cancellationToken);
 
-        // Execute task and stream progress updates
-        // NOTE: Full streaming with Anthropic SDK requires workaround for C#'s
-        // limitation on yield return in try-catch blocks. For Phase 3, we provide
-        // basic streaming by executing normally and yielding periodic updates.
-        // True token-by-token streaming can be added in Phase 4.
+        // Wrap execution with timeout protection
+        var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(_config.TimeoutSeconds));
 
-        var result = await ExecuteTaskAsync(task, userId, conversationHistory, cancellationToken);
-
-        if (result.Success)
+        try
         {
-            yield return new AgentStreamEvent
+            _logger.LogInformation(
+                "Starting streaming agent task {TaskId} for user {UserId}: {Task}",
+                taskId, userId, task);
+
+            // Build tool definitions
+            var toolDefinitions = BuildToolDefinitions();
+
+            // Initialize conversation with history (if provided) or start fresh
+            var messages = new List<Message>();
+
+            // Add conversation history if provided
+            if (conversationHistory != null && conversationHistory.Count > 0)
+            {
+                foreach (var msg in conversationHistory)
+                {
+                    messages.Add(new Message
+                    {
+                        Role = msg.Role.ToLower() == "user" ? RoleType.User : RoleType.Assistant,
+                        Content = new List<ContentBase>
+                        {
+                            new TextContent { Text = msg.Content }
+                        }
+                    });
+                }
+
+                _logger.LogDebug("Loaded {Count} messages from conversation history", conversationHistory.Count);
+            }
+
+            // Add current task as new user message
+            messages.Add(new Message
+            {
+                Role = RoleType.User,
+                Content = new List<ContentBase>
+                {
+                    new TextContent { Text = task }
+                }
+            });
+
+            // Agent loop - iterate until task completion or max iterations
+            var iteration = 0;
+            var finalTextResponse = new System.Text.StringBuilder();
+
+            while (iteration < _config.MaxIterations)
+            {
+                iteration++;
+                _logger.LogDebug("Agent iteration {Iteration}/{MaxIterations}", iteration, _config.MaxIterations);
+
+                // Emit iteration event
+                await writer.WriteAsync(new AgentStreamEvent
+                {
+                    Type = "thinking",
+                    Message = $"Iteration {iteration}/{_config.MaxIterations}"
+                }, cancellationToken);
+
+                // Call Claude with tools
+                var parameters = new MessageParameters
+                {
+                    Messages = messages,
+                    MaxTokens = _config.MaxTokens,
+                    Model = _config.Model,
+                    Temperature = (decimal)_config.Temperature,
+                    System = new List<SystemMessage>
+                    {
+                        new(_config.SystemPrompt)
+                    },
+                    Tools = toolDefinitions.Cast<CommonTool>().ToList()
+                };
+
+                var response = await _anthropicClient.Messages.GetClaudeMessageAsync(
+                    parameters,
+                    timeoutCts.Token);
+
+                // Check stop reason
+                if (response.StopReason == "end_turn")
+                {
+                    // Agent finished - extract text response
+                    var textContent = response.Content?
+                        .Where(c => c is TextContent)
+                        .Cast<TextContent>()
+                        .Select(c => c.Text)
+                        .ToList();
+
+                    if (textContent?.Any() == true)
+                    {
+                        var responseText = string.Join("\n", textContent);
+                        finalTextResponse.AppendLine(responseText);
+
+                        // Emit text chunk event
+                        await writer.WriteAsync(new AgentStreamEvent
+                        {
+                            Type = "text_chunk",
+                            Message = "Agent response",
+                            Content = responseText
+                        }, cancellationToken);
+                    }
+
+                    _logger.LogInformation("Agent task {TaskId} completed successfully after {Iterations} iterations",
+                        taskId, iteration);
+
+                    break;
+                }
+
+                if (response.StopReason == "tool_use")
+                {
+                    // Agent wants to use tools
+                    var toolUses = response.Content?
+                        .Where(c => c is ToolUseContent)
+                        .Cast<ToolUseContent>()
+                        .ToList() ?? new List<ToolUseContent>();
+
+                    if (!toolUses.Any())
+                    {
+                        _logger.LogWarning("Stop reason was tool_use but no tool use content found");
+                        break;
+                    }
+
+                    // Collect text from this turn
+                    var textContent = response.Content?
+                        .Where(c => c is TextContent)
+                        .Cast<TextContent>()
+                        .Select(c => c.Text)
+                        .ToList();
+
+                    if (textContent?.Any() == true)
+                    {
+                        var responseText = string.Join("\n", textContent);
+                        finalTextResponse.AppendLine(responseText);
+
+                        // Emit text chunk event
+                        await writer.WriteAsync(new AgentStreamEvent
+                        {
+                            Type = "text_chunk",
+                            Message = "Agent thinking",
+                            Content = responseText
+                        }, cancellationToken);
+                    }
+
+                    // Add assistant message to conversation
+                    messages.Add(new Message
+                    {
+                        Role = RoleType.Assistant,
+                        Content = response.Content
+                    });
+
+                    // Emit tool call events
+                    foreach (var toolUse in toolUses)
+                    {
+                        await writer.WriteAsync(new AgentStreamEvent
+                        {
+                            Type = "tool_call",
+                            Message = $"Calling tool: {toolUse.Name}",
+                            Output = toolUse.Input.ToJsonString()
+                        }, cancellationToken);
+                    }
+
+                    // Execute tools and collect results
+                    var toolResults = await ExecuteToolsAsync(toolUses, userId, timeoutCts.Token);
+
+                    // Emit tool result events
+                    foreach (var (toolUseId, content) in toolResults)
+                    {
+                        var toolName = toolUses.FirstOrDefault(t => t.Id == toolUseId)?.Name ?? "unknown";
+                        await writer.WriteAsync(new AgentStreamEvent
+                        {
+                            Type = "tool_result",
+                            Message = $"Tool {toolName} completed",
+                            Content = content
+                        }, cancellationToken);
+                    }
+
+                    // Add tool results as user message
+                    messages.Add(new Message
+                    {
+                        Role = RoleType.User,
+                        Content = toolResults.Select(tr => new ToolResultContent
+                        {
+                            ToolUseId = tr.ToolUseId,
+                            Content = new List<ContentBase>
+                            {
+                                new TextContent { Text = tr.Content }
+                            }
+                        }).ToList<ContentBase>()
+                    });
+
+                    // Continue to next iteration
+                    continue;
+                }
+
+                // Unexpected stop reason
+                _logger.LogWarning("Unexpected stop reason: {StopReason}", response.StopReason);
+                break;
+            }
+
+            if (iteration >= _config.MaxIterations)
+            {
+                _logger.LogWarning("Agent task {TaskId} reached max iterations ({MaxIterations})",
+                    taskId, _config.MaxIterations);
+            }
+
+            // Emit completed event
+            await writer.WriteAsync(new AgentStreamEvent
             {
                 Type = "completed",
                 Message = "Task completed successfully",
-                Content = result.Result
-            };
+                Content = finalTextResponse.ToString()
+            }, cancellationToken);
         }
-        else
+        catch (OperationCanceledException) when (timeoutCts.Token.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
-            yield return new AgentStreamEvent
+            _logger.LogWarning("Agent task {TaskId} exceeded timeout of {TimeoutSeconds} seconds",
+                taskId, _config.TimeoutSeconds);
+
+            await writer.WriteAsync(new AgentStreamEvent
             {
                 Type = "error",
                 Message = "Task failed",
-                Output = result.Error
-            };
+                Output = $"Agent task exceeded timeout of {_config.TimeoutSeconds} seconds"
+            }, cancellationToken);
         }
     }
 

@@ -1,6 +1,6 @@
 # Agent Module Examples
 
-**Last Updated:** 2025-12-27
+**Last Updated:** 2025-12-30
 
 Real-world examples of AI agent tasks and their execution workflows.
 
@@ -10,7 +10,7 @@ Real-world examples of AI agent tasks and their execution workflows.
 
 ### User Request
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Categorize all uncategorized questions about programming"
 }
@@ -81,7 +81,7 @@ Response: {
 
 ### User Request
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Find duplicate questions and delete the redundant ones, keeping the better-worded version"
 }
@@ -152,7 +152,7 @@ Response: { "id": "q-300", "message": "Question deleted successfully" }
 
 ### User Request
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Create 5 JavaScript closure questions for Senior Developer qualification, make them challenging"
 }
@@ -227,7 +227,7 @@ Response: {
 
 ### User Request
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Analyze all Python questions and suggest difficulty levels (easy, intermediate, hard)"
 }
@@ -300,7 +300,7 @@ Response: {
 
 ### User Request
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Review all my questions: categorize any uncategorized ones, find and remove duplicates, and create a summary report"
 }
@@ -337,7 +337,7 @@ POST /api/agent/queue
 
 ### User Request (Intentional Error)
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Delete all questions in category cat-999"
 }
@@ -472,21 +472,40 @@ Typical execution times for common tasks:
 
 ## Monitoring and Debugging
 
-### Check Task Progress
+### Real-Time Streaming Events
+
+With the streaming API, you receive real-time updates as the task executes:
 
 ```csharp
-var task = await _taskQueueService.GetTaskWithUserIdAsync(taskId, userId);
-
-Console.WriteLine($"Status: {task.Status}");
-// "pending" | "processing" | "completed" | "failed"
-
-if (task.Status == "completed")
+await foreach (var streamEvent in _agentService.ExecuteTaskStreamingAsync(
+    task: "Categorize all questions",
+    userId: currentUserId,
+    cancellationToken: cancellationToken))
 {
-    Console.WriteLine($"Result: {task.Result}");
-}
-else if (task.Status == "failed")
-{
-    Console.WriteLine($"Error: {task.Error}");
+    switch (streamEvent.Type)
+    {
+        case "started":
+            Console.WriteLine("Task started");
+            break;
+        case "thinking":
+            Console.WriteLine("Agent is analyzing...");
+            break;
+        case "tool_call":
+            Console.WriteLine($"Calling tool: {streamEvent.ToolName}");
+            break;
+        case "tool_result":
+            Console.WriteLine($"Tool result: {streamEvent.Content}");
+            break;
+        case "text_chunk":
+            Console.Write(streamEvent.Content);
+            break;
+        case "completed":
+            Console.WriteLine($"\nCompleted: {streamEvent.Content}");
+            break;
+        case "error":
+            Console.WriteLine($"Error: {streamEvent.Message}");
+            break;
+    }
 }
 ```
 
@@ -494,7 +513,7 @@ else if (task.Status == "failed")
 
 Check application logs for agent execution details:
 ```
-[AgentExecutor] Starting agent task task-123
+[AgentExecutor] Starting streaming execution
 [AgentExecutor] Agent iteration 1/20
 [AgentExecutor] Executing tool: get_uncategorized_questions
 [AgentExecutor] Tool executed successfully
@@ -510,7 +529,7 @@ Check application logs for agent execution details:
 
 ### User Request (Turn 1 - Start Conversation)
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Update all uncategorized questions"
 }
@@ -534,7 +553,7 @@ Response: {
 
 ### User Request (Turn 2 - Continue Conversation)
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Provide me the ids of all updated questions",
   "conversationId": "conv-123"
@@ -558,7 +577,7 @@ POST /api/agent/queue
 
 ### User Request (Turn 3 - Continue Conversation)
 ```http
-POST /api/agent/queue
+POST /api/agent/execute
 {
   "task": "Delete the first 3 questions",
   "conversationId": "conv-123"
@@ -624,4 +643,4 @@ POST /api/agent/queue
 
 ---
 
-**Last Updated:** 2025-12-27
+**Last Updated:** 2025-12-30
