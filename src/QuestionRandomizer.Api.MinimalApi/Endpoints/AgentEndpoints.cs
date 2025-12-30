@@ -127,9 +127,9 @@ public static class AgentEndpoints
 
         try
         {
-            var status = await agentService.GetTaskStatusAsync(taskId, cancellationToken);
+            var status = await agentService.GetTaskStatusAsync(taskId, userId, cancellationToken);
 
-            if (status.Status == "error" && status.Error?.Contains("not found") == true)
+            if (status.Status == "unknown")
             {
                 return TypedResults.NotFound();
             }

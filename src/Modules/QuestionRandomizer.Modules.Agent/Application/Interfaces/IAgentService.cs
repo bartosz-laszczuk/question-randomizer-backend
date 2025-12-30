@@ -22,22 +22,6 @@ public interface IAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Executes an agent task with streaming progress updates (Server-Sent Events)
-    /// </summary>
-    /// <param name="task">The task description for the agent</param>
-    /// <param name="userId">The user ID making the request</param>
-    /// <param name="onProgress">Callback for progress updates</param>
-    /// <param name="conversationId">Optional conversation ID for context continuity</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Result of the agent task execution</returns>
-    Task<AgentTaskResult> ExecuteTaskStreamingAsync(
-        string task,
-        string userId,
-        Action<AgentStreamEvent> onProgress,
-        string? conversationId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Queues an agent task for background processing
     /// </summary>
     /// <param name="task">The task description for the agent</param>
@@ -55,9 +39,10 @@ public interface IAgentService
     /// Gets the status of a queued agent task
     /// </summary>
     /// <param name="taskId">The task ID</param>
+    /// <param name="userId">The user ID for security filtering</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Status of the task</returns>
-    Task<AgentTaskStatus> GetTaskStatusAsync(string taskId, CancellationToken cancellationToken = default);
+    Task<AgentTaskStatus> GetTaskStatusAsync(string taskId, string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Streams real-time updates for a queued agent task

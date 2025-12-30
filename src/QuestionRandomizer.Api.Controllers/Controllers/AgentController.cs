@@ -137,9 +137,9 @@ public class AgentController : ControllerBase
 
         try
         {
-            var status = await _agentService.GetTaskStatusAsync(taskId, cancellationToken);
+            var status = await _agentService.GetTaskStatusAsync(taskId, userId, cancellationToken);
 
-            if (status.Status == "error" && status.Error?.Contains("not found") == true)
+            if (status.Status == "unknown")
             {
                 return NotFound(new { Error = "Task not found", TaskId = taskId });
             }
