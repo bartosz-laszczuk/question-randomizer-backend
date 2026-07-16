@@ -18,7 +18,7 @@ This README covers only running the service. Everything descriptive lives in the
 - .NET 10 SDK (`dotnet --version` → 10.x)
 - A Firebase project (Firestore + Auth). Save the service-account key as
   `firebase-dev-credentials.json` and reference it from `appsettings.Development.json`
-  (see [`docs/guides/CONFIGURATION.md`](docs/guides/CONFIGURATION.md)). **Never commit credentials.**
+  (see [`docs/guides/configuration.md`](docs/guides/configuration.md)). **Never commit credentials.**
 - An Anthropic API key for the AI agent (`Anthropic:*` config).
 - Docker Desktop (optional; for integration tests / compose).
 
@@ -45,5 +45,5 @@ dotnet test tests/QuestionRandomizer.Modules.Questions.Tests
 dotnet test /p:CollectCoverage=true                      # with coverage
 ```
 
-Testing strategy → [`docs/guides/TESTING.md`](docs/guides/TESTING.md).
+Testing strategy → [`docs/guides/testing.md`](docs/guides/testing.md).
 Setup, deployment, security → [`docs/guides/`](docs/guides/).

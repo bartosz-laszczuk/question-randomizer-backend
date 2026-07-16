@@ -37,7 +37,7 @@ memory. Shapes: [`schema.json`](../schema.json). Endpoint/stream contract: [`api
 
 ## Dependencies
 Anthropic API key configured (`Anthropic:*`). Detailed tool docs:
-`src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md`, [`guides/AGENT-TOOLS-REFERENCE.md`](../guides/AGENT-TOOLS-REFERENCE.md).
+`src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md`, [`guides/agent-tools-reference.md`](../guides/agent-tools-reference.md).
 
 ## Out of scope
 Individual CRUD contracts (see the respective management features).

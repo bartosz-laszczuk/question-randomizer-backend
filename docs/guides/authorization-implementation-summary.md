@@ -46,12 +46,12 @@ This document summarizes all changes made to implement the role-based authorizat
 
 ### Documentation
 
-6. **`docs/AUTHORIZATION.md`**
+6. **`docs/authorization.md`**
    - Comprehensive authorization system documentation
    - Architecture, roles, permissions, usage guide, code examples
    - Troubleshooting and best practices
 
-7. **`AUTHORIZATION-IMPLEMENTATION-SUMMARY.md`** (this file)
+7. **`authorization-implementation-summary.md`** (this file)
    - Summary of all changes made
 
 ---
@@ -153,9 +153,9 @@ This document summarizes all changes made to implement the role-based authorizat
 ### Documentation
 
 20. **`CLAUDE.md`**
-    - Updated Documentation Index to include AUTHORIZATION.md
+    - Updated Documentation Index to include authorization.md
     - Updated Security Notes section with authorization best practices
-    - Added reference link to AUTHORIZATION.md
+    - Added reference link to authorization.md
 
 ---
 
@@ -322,7 +322,7 @@ await _userManagement.UpgradeToPremiumAsync(userId);
 - [x] AuthorizedHandlerBase created
 - [x] UserManagementService created
 - [x] Test infrastructure updated
-- [x] Documentation created (AUTHORIZATION.md)
+- [x] Documentation created (authorization.md)
 - [x] Main documentation updated (CLAUDE.md)
 - [x] All files use authorization policies (no plain [Authorize])
 - [x] No hardcoded role strings (all use constants)
@@ -334,7 +334,7 @@ await _userManagement.UpgradeToPremiumAsync(userId);
 ### For Developers
 
 1. **Read the documentation**
-   - [AUTHORIZATION.md](./AUTHORIZATION.md) - Complete guide
+   - [authorization.md](./authorization.md) - Complete guide
 
 2. **Update existing handlers**
    - Inherit from `AuthorizedHandlerBase`
@@ -380,4 +380,4 @@ All 7 phases of the authorization system have been successfully implemented and 
 
 ---
 
-**For questions, refer to [AUTHORIZATION.md](./AUTHORIZATION.md)**
+**For questions, refer to [authorization.md](./authorization.md)**

@@ -24,7 +24,7 @@ Every caller. Enforced in the SharedKernel (auth middleware, `ICurrentUserServic
 - **Given** either API, **then** enforcement is identical.
 
 ## Data touched
-Firebase Auth (identity); `users` (roles). Full model: [`guides/AUTHORIZATION.md`](../guides/AUTHORIZATION.md).
+Firebase Auth (identity); `users` (roles). Full model: [`guides/authorization.md`](../guides/authorization.md).
 
 ## Out of scope
 Per-feature CRUD behavior (see each feature spec).

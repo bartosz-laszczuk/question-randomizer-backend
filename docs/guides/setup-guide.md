@@ -16,7 +16,7 @@ Before starting, ensure you have:
 - ✅ **Docker Desktop** (for integration tests with TestContainers)
 - ✅ **Git** for version control
 
-**NOTE:** This guide reflects the current Modular Monolith architecture. For the migration history from Clean Architecture, see [MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md).
+**NOTE:** This guide reflects the current Modular Monolith architecture. For the migration history from Clean Architecture, see [migration-summary.md](./migration-summary.md).
 
 ---
 
@@ -478,10 +478,10 @@ dotnet --version  # Should show 10.x.x
 ## Next Steps
 
 1. **Read [CLAUDE.md](../../CLAUDE.md)** - Developer guide with architecture overview
-2. **Read [CODE-TEMPLATES.md](./CODE-TEMPLATES.md)** - Code patterns and examples
-3. **Read [CONFIGURATION.md](./CONFIGURATION.md)** - Configuration details
-4. **Read [DUAL-API-GUIDE.md](./DUAL-API-GUIDE.md)** - Controllers vs Minimal API
-5. **Read [TESTING.md](./TESTING.md)** - Testing strategy and examples
+2. **Read [code-templates.md](./code-templates.md)** - Code patterns and examples
+3. **Read [configuration.md](./configuration.md)** - Configuration details
+4. **Read [dual-api-guide.md](./dual-api-guide.md)** - Controllers vs Minimal API
+5. **Read [testing.md](./testing.md)** - Testing strategy and examples
 6. **Start developing** - Follow the Getting Started guide in CLAUDE.md
 
 ---

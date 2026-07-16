@@ -691,8 +691,8 @@ protected override async Task<ToolResult> ExecuteInternalAsync(
 
 ## Related Documentation
 
-- **[AGENT-TOOL-DEVELOPMENT.md](./AGENT-TOOL-DEVELOPMENT.md)** - How to create new tools
-- **[AGENT-EXAMPLES.md](./AGENT-EXAMPLES.md)** - Real-world usage examples
+- **[agent-tool-development.md](./agent-tool-development.md)** - How to create new tools
+- **[agent-examples.md](./agent-examples.md)** - Real-world usage examples
 - **[Module CLAUDE.md](../../src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md)** - Agent Module overview
 
 ---

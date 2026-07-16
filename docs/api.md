@@ -3,7 +3,7 @@
 This backend is the **producer** of the system's API contract. Both API implementations
 (Controllers @ 5000, Minimal @ 5001) expose the **same** endpoints; every change must land in both.
 Data shapes are in [`schema.json`](schema.json); the Controllers-vs-Minimal comparison is in
-[`guides/DUAL-API-GUIDE.md`](guides/DUAL-API-GUIDE.md).
+[`guides/dual-api-guide.md`](guides/dual-api-guide.md).
 
 ## Canonical machine-readable spec
 

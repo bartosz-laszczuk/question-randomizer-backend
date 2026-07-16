@@ -59,7 +59,7 @@ Two presentation projects expose the **same** contract over the same modules:
 
 They are functionally identical; the split is a learning/comparison exercise showing the
 presentation layer is independent of the business architecture. Comparison details:
-[`guides/DUAL-API-GUIDE.md`](guides/DUAL-API-GUIDE.md). **Any endpoint change must be applied to both.**
+[`guides/dual-api-guide.md`](guides/dual-api-guide.md). **Any endpoint change must be applied to both.**
 
 ## AI agent module
 
@@ -75,9 +75,9 @@ Execution streams Server-Sent Events (`started`, `thinking`, `text_chunk`, `tool
 `tool_result`, `completed`, `error`) with a configurable execution timeout (default 120 s /
 2 minutes, `AgentConfiguration.TimeoutSeconds`) and conversation-context memory.
 Detailed agent dev docs live with the module: `src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md`,
-plus [`guides/AGENT-TOOLS-REFERENCE.md`](guides/AGENT-TOOLS-REFERENCE.md),
-[`guides/AGENT-TOOL-DEVELOPMENT.md`](guides/AGENT-TOOL-DEVELOPMENT.md),
-[`guides/AGENT-EXAMPLES.md`](guides/AGENT-EXAMPLES.md).
+plus [`guides/agent-tools-reference.md`](guides/agent-tools-reference.md),
+[`guides/agent-tool-development.md`](guides/agent-tool-development.md),
+[`guides/agent-examples.md`](guides/agent-examples.md).
 
 ## Data access
 
@@ -96,7 +96,7 @@ the stored shapes are specified in [`schema.json`](schema.json). Repositories ve
 
 Firebase ID token (bearer) authenticates each request; `ICurrentUserService` exposes the verified
 `userId`. Authorization is policy-based (e.g. `AdminPolicy` guards `/api/admin/*`). Full model:
-[`guides/AUTHORIZATION.md`](guides/AUTHORIZATION.md); behavior:
+[`guides/authorization.md`](guides/authorization.md); behavior:
 [`features/authentication-and-authorization.md`](features/authentication-and-authorization.md).
 
 ## Known structural drift
@@ -107,8 +107,8 @@ still exist under `src/`. They should be confirmed dead and removed, or document
 
 ## Cross-cutting references
 
-- Configuration & ports → [`guides/CONFIGURATION.md`](guides/CONFIGURATION.md), [`guides/SETUP-GUIDE.md`](guides/SETUP-GUIDE.md)
-- Deployment → [`guides/DEPLOYMENT.md`](guides/DEPLOYMENT.md)
-- Testing strategy → [`guides/TESTING.md`](guides/TESTING.md)
-- Code patterns/templates → [`guides/CODE-TEMPLATES.md`](guides/CODE-TEMPLATES.md)
-- Migration history → [`guides/MIGRATION-SUMMARY.md`](guides/MIGRATION-SUMMARY.md)
+- Configuration & ports → [`guides/configuration.md`](guides/configuration.md), [`guides/setup-guide.md`](guides/setup-guide.md)
+- Deployment → [`guides/deployment.md`](guides/deployment.md)
+- Testing strategy → [`guides/testing.md`](guides/testing.md)
+- Code patterns/templates → [`guides/code-templates.md`](guides/code-templates.md)
+- Migration history → [`guides/migration-summary.md`](guides/migration-summary.md)

@@ -637,8 +637,8 @@ POST /api/agent/execute
 
 ## Related Documentation
 
-- **[AGENT-TOOLS-REFERENCE.md](./AGENT-TOOLS-REFERENCE.md)** - Complete reference of all 15 tools
-- **[AGENT-TOOL-DEVELOPMENT.md](./AGENT-TOOL-DEVELOPMENT.md)** - How to create new tools
+- **[agent-tools-reference.md](./agent-tools-reference.md)** - Complete reference of all 15 tools
+- **[agent-tool-development.md](./agent-tool-development.md)** - How to create new tools
 - **[Module CLAUDE.md](../../src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md)** - Agent Module overview
 
 ---

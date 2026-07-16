@@ -775,10 +775,10 @@ protected override async Task<ToolResult> ExecuteInternalAsync(...)
 
 ## Related Documentation
 
-- **[AGENT-TOOLS-REFERENCE.md](./AGENT-TOOLS-REFERENCE.md)** - Complete reference of all 15 tools
-- **[AGENT-EXAMPLES.md](./AGENT-EXAMPLES.md)** - Real-world usage examples
-- **[TESTING.md](./TESTING.md)** - General testing guide
-- **[CODE-TEMPLATES.md](./CODE-TEMPLATES.md)** - Other code patterns
+- **[agent-tools-reference.md](./agent-tools-reference.md)** - Complete reference of all 15 tools
+- **[agent-examples.md](./agent-examples.md)** - Real-world usage examples
+- **[testing.md](./testing.md)** - General testing guide
+- **[code-templates.md](./code-templates.md)** - Other code patterns
 
 ---
 

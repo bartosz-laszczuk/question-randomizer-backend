@@ -13,14 +13,14 @@ architecture, API, or how-to-run content — those live once, in the places belo
 | Architecture & tech decisions | [`docs/architecture.md`](docs/architecture.md) |
 | API contract (endpoints, streaming) | [`docs/api.md`](docs/api.md) |
 | Firestore data shapes | [`docs/schema.json`](docs/schema.json) |
-| Authorization model | [`docs/guides/AUTHORIZATION.md`](docs/guides/AUTHORIZATION.md) |
-| Agent tools (reference / dev / examples) | [`docs/guides/AGENT-TOOLS-REFERENCE.md`](docs/guides/AGENT-TOOLS-REFERENCE.md), [`docs/guides/AGENT-TOOL-DEVELOPMENT.md`](docs/guides/AGENT-TOOL-DEVELOPMENT.md), [`docs/guides/AGENT-EXAMPLES.md`](docs/guides/AGENT-EXAMPLES.md) |
+| Authorization model | [`docs/guides/authorization.md`](docs/guides/authorization.md) |
+| Agent tools (reference / dev / examples) | [`docs/guides/agent-tools-reference.md`](docs/guides/agent-tools-reference.md), [`docs/guides/agent-tool-development.md`](docs/guides/agent-tool-development.md), [`docs/guides/agent-examples.md`](docs/guides/agent-examples.md) |
 | Agent module dev guide | [`src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md`](src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md) |
-| Code patterns / templates | [`docs/guides/CODE-TEMPLATES.md`](docs/guides/CODE-TEMPLATES.md) |
-| Controllers vs Minimal API | [`docs/guides/DUAL-API-GUIDE.md`](docs/guides/DUAL-API-GUIDE.md) |
-| Setup / configuration / deployment | [`docs/guides/SETUP-GUIDE.md`](docs/guides/SETUP-GUIDE.md), [`docs/guides/CONFIGURATION.md`](docs/guides/CONFIGURATION.md), [`docs/guides/DEPLOYMENT.md`](docs/guides/DEPLOYMENT.md) |
-| Testing strategy | [`docs/guides/TESTING.md`](docs/guides/TESTING.md) |
-| Security audit / migration history | [`docs/guides/SECURITY-AUDIT.md`](docs/guides/SECURITY-AUDIT.md), [`docs/guides/MIGRATION-SUMMARY.md`](docs/guides/MIGRATION-SUMMARY.md) |
+| Code patterns / templates | [`docs/guides/code-templates.md`](docs/guides/code-templates.md) |
+| Controllers vs Minimal API | [`docs/guides/dual-api-guide.md`](docs/guides/dual-api-guide.md) |
+| Setup / configuration / deployment | [`docs/guides/setup-guide.md`](docs/guides/setup-guide.md), [`docs/guides/configuration.md`](docs/guides/configuration.md), [`docs/guides/deployment.md`](docs/guides/deployment.md) |
+| Testing strategy | [`docs/guides/testing.md`](docs/guides/testing.md) |
+| Security audit / migration history | [`docs/guides/security-audit.md`](docs/guides/security-audit.md), [`docs/guides/migration-summary.md`](docs/guides/migration-summary.md) |
 | Run / build / test commands | [`README.md`](README.md) |
 
 ## Spec-Driven Development workflow
@@ -46,7 +46,7 @@ Spec-first. The spec drives the code.
 4. **Security:** resolve identity only via `ICurrentUserService`; **never trust a client-supplied
    `userId`**; verify ownership before every read/update/delete; never commit Firebase/Anthropic
    credentials.
-5. **Patterns:** follow [`docs/guides/CODE-TEMPLATES.md`](docs/guides/CODE-TEMPLATES.md); write tests
+5. **Patterns:** follow [`docs/guides/code-templates.md`](docs/guides/code-templates.md); write tests
    for new behavior (module + integration on both APIs).
 
 ## Known drift to reconcile

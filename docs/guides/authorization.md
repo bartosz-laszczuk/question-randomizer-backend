@@ -662,11 +662,11 @@ EnsureOwnership(resource.UserId); // Skips check if IsAdmin() == true
 
 ## Related Documentation
 
-- [SETUP-GUIDE.md](./SETUP-GUIDE.md) - Initial setup and configuration
-- [CONFIGURATION.md](./CONFIGURATION.md) - Configuration details
-- [TESTING.md](./TESTING.md) - Testing strategies
-- [SECURITY-AUDIT.md](./SECURITY-AUDIT.md) - Security checklist
-- [DUAL-API-GUIDE.md](./DUAL-API-GUIDE.md) - Controllers vs Minimal API comparison
+- [setup-guide.md](./setup-guide.md) - Initial setup and configuration
+- [configuration.md](./configuration.md) - Configuration details
+- [testing.md](./testing.md) - Testing strategies
+- [security-audit.md](./security-audit.md) - Security checklist
+- [dual-api-guide.md](./dual-api-guide.md) - Controllers vs Minimal API comparison
 
 ---
 
@@ -690,6 +690,6 @@ EnsureOwnership(resource.UserId); // Skips check if IsAdmin() == true
 
 For questions or issues related to authorization:
 1. Check this documentation first
-2. Review code examples in [CODE-TEMPLATES.md](./CODE-TEMPLATES.md)
+2. Review code examples in [code-templates.md](./code-templates.md)
 3. Check existing tests in `tests/` directory
 4. Refer to ASP.NET Core authorization docs: https://learn.microsoft.com/aspnet/core/security/authorization/

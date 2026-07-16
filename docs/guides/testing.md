@@ -554,7 +554,7 @@ Pass Rate: 100%
 5. **ASP.NET Core Route Casing** - Updated assertions to match framework behavior
 6. **Randomization Status Values** - Aligned test data with validator requirements ("Ongoing"/"Completed")
 
-**📖 See [INTEGRATION-TEST-SUMMARY.md](./INTEGRATION-TEST-SUMMARY.md) for detailed breakdown of all issues and resolutions.**
+**📖 See [integration-test-summary.md](./integration-test-summary.md) for detailed breakdown of all issues and resolutions.**
 
 ---
 

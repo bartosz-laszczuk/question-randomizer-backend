@@ -9,9 +9,9 @@
 
 ## 📚 Documentation Index
 
-- **[AGENT-TOOL-DEVELOPMENT.md](../../../docs/guides/AGENT-TOOL-DEVELOPMENT.md)** - Complete guide to creating new tools
-- **[AGENT-TOOLS-REFERENCE.md](../../../docs/guides/AGENT-TOOLS-REFERENCE.md)** - All 15 tools documented
-- **[AGENT-EXAMPLES.md](../../../docs/guides/AGENT-EXAMPLES.md)** - Real-world usage examples
+- **[agent-tool-development.md](../../../docs/guides/agent-tool-development.md)** - Complete guide to creating new tools
+- **[agent-tools-reference.md](../../../docs/guides/agent-tools-reference.md)** - All 15 tools documented
+- **[agent-examples.md](../../../docs/guides/agent-examples.md)** - Real-world usage examples
 
 ---
 
@@ -390,7 +390,7 @@ messages/                   # Conversation messages
 - `find_duplicate_questions` - Identify duplicates with similarity scores
 - `analyze_question_difficulty` - Suggest difficulty levels
 
-**📖 See [AGENT-TOOLS-REFERENCE.md](../../../docs/guides/AGENT-TOOLS-REFERENCE.md) for complete tool documentation with schemas and examples.**
+**📖 See [agent-tools-reference.md](../../../docs/guides/agent-tools-reference.md) for complete tool documentation with schemas and examples.**
 
 ---
 
@@ -467,7 +467,7 @@ public class MyTool : AgentToolBase
 }
 ```
 
-**📖 See [AGENT-TOOL-DEVELOPMENT.md](../../../docs/guides/AGENT-TOOL-DEVELOPMENT.md) for complete step-by-step guide.**
+**📖 See [agent-tool-development.md](../../../docs/guides/agent-tool-development.md) for complete step-by-step guide.**
 
 ---
 
@@ -497,7 +497,7 @@ Task: "Analyze Python question difficulty"
 Flow: search_questions → analyze_question_difficulty → summary report
 ```
 
-**📖 See [AGENT-EXAMPLES.md](../../../docs/guides/AGENT-EXAMPLES.md) for 6 detailed examples with agent decision flows.**
+**📖 See [agent-examples.md](../../../docs/guides/agent-examples.md) for 6 detailed examples with agent decision flows.**
 
 ---
 
@@ -538,7 +538,7 @@ public async Task Agent_ExecutesTask_Successfully()
 }
 ```
 
-**📖 See [TESTING.md](../../../docs/guides/TESTING.md) for general testing guide.**
+**📖 See [testing.md](../../../docs/guides/testing.md) for general testing guide.**
 
 ---
 
@@ -593,15 +593,15 @@ public async Task Agent_ExecutesTask_Successfully()
 ## Related Documentation
 
 **Module-Specific:**
-- [AGENT-TOOL-DEVELOPMENT.md](../../../docs/guides/AGENT-TOOL-DEVELOPMENT.md) - Tool development guide
-- [AGENT-TOOLS-REFERENCE.md](../../../docs/guides/AGENT-TOOLS-REFERENCE.md) - All 15 tools documented
-- [AGENT-EXAMPLES.md](../../../docs/guides/AGENT-EXAMPLES.md) - Real-world examples
+- [agent-tool-development.md](../../../docs/guides/agent-tool-development.md) - Tool development guide
+- [agent-tools-reference.md](../../../docs/guides/agent-tools-reference.md) - All 15 tools documented
+- [agent-examples.md](../../../docs/guides/agent-examples.md) - Real-world examples
 
 **General Backend:**
 - [Main CLAUDE.md](../../../CLAUDE.md) - Backend developer guide
 - [ARCHITECTURE.md](../../../../ARCHITECTURE.md) - System architecture
-- [CODE-TEMPLATES.md](../../../docs/guides/CODE-TEMPLATES.md) - Code patterns
-- [TESTING.md](../../../docs/guides/TESTING.md) - Testing strategy
+- [code-templates.md](../../../docs/guides/code-templates.md) - Code patterns
+- [testing.md](../../../docs/guides/testing.md) - Testing strategy
 
 **External:**
 - [Anthropic SDK](https://github.com/Anthropic/anthropic-sdk-dotnet)
