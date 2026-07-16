@@ -34,11 +34,11 @@ Search for all documentation files:
 ### 2.1 Extract Verbose Sections
 
 **ALWAYS extract these if present (>50 lines):**
-- Code templates and examples → `/docs/CODE-TEMPLATES.md`
-- Step-by-step setup guides → `/docs/SETUP-GUIDE.md`
-- Configuration details → `/docs/CONFIGURATION.md`
-- Testing strategies → `/docs/TESTING.md`
-- Deployment procedures → `/docs/DEPLOYMENT.md`
+- Code templates and examples → `/docs/guides/CODE-TEMPLATES.md`
+- Step-by-step setup guides → `/docs/guides/SETUP-GUIDE.md`
+- Configuration details → `/docs/guides/CONFIGURATION.md`
+- Testing strategies → `/docs/guides/TESTING.md`
+- Deployment procedures → `/docs/guides/DEPLOYMENT.md`
 - API-specific guides → `/docs/<TOPIC>-GUIDE.md`
 
 **Extraction Criteria:**
@@ -87,11 +87,11 @@ Create a documentation index at the top:
 ```markdown
 ## 📚 Documentation Index
 
-- **[CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md)** - Code patterns
-- **[SETUP-GUIDE.md](./docs/SETUP-GUIDE.md)** - Setup instructions
-- **[CONFIGURATION.md](./docs/CONFIGURATION.md)** - Configuration guide
-- **[TESTING.md](./docs/TESTING.md)** - Testing strategy
-- **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide
+- **[CODE-TEMPLATES.md](./docs/guides/CODE-TEMPLATES.md)** - Code patterns
+- **[SETUP-GUIDE.md](./docs/guides/SETUP-GUIDE.md)** - Setup instructions
+- **[CONFIGURATION.md](./docs/guides/CONFIGURATION.md)** - Configuration guide
+- **[TESTING.md](./docs/guides/TESTING.md)** - Testing strategy
+- **[DEPLOYMENT.md](./docs/guides/DEPLOYMENT.md)** - Deployment guide
 ```
 
 ### 3.2 Cross-Link Documents
@@ -199,9 +199,9 @@ After optimization, report:
 - **Reduction:** [Z] lines ([P]%)
 
 ### Files Created/Updated
-- ✅ Created `/docs/CODE-TEMPLATES.md` ([lines] lines)
-- ✅ Created `/docs/SETUP-GUIDE.md` ([lines] lines)
-- ✅ Created `/docs/CONFIGURATION.md` ([lines] lines)
+- ✅ Created `/docs/guides/CODE-TEMPLATES.md` ([lines] lines)
+- ✅ Created `/docs/guides/SETUP-GUIDE.md` ([lines] lines)
+- ✅ Created `/docs/guides/CONFIGURATION.md` ([lines] lines)
 - ✅ Updated `CLAUDE.md` (condensed with links)
 
 ### Sections Extracted
@@ -288,7 +288,7 @@ Respect existing documentation patterns:
 ```markdown
 ## Code Patterns
 
-All code follows established templates. See **[CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md)** for complete examples.
+All code follows established templates. See **[CODE-TEMPLATES.md](./docs/guides/CODE-TEMPLATES.md)** for complete examples.
 
 **Quick Reference:**
 - **Domain Entities:** POCOs with XML docs, zero dependencies
@@ -296,7 +296,7 @@ All code follows established templates. See **[CODE-TEMPLATES.md](./docs/CODE-TE
 - **CQRS Commands:** `IRequest<TResponse>` records
 - **Command Handlers:** `IRequestHandler<TRequest, TResponse>`
 
-**📖 See [CODE-TEMPLATES.md](./docs/CODE-TEMPLATES.md) for all 12 templates.**
+**📖 See [CODE-TEMPLATES.md](./docs/guides/CODE-TEMPLATES.md) for all 12 templates.**
 ```
 
 **Result:** 200 lines → 15 lines (185 lines saved)

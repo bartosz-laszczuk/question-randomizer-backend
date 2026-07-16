@@ -225,6 +225,6 @@ When adding new E2E tests:
 
 ## Related Documentation
 
-- [TESTING.md](../../docs/TESTING.md) - Overall testing strategy
+- [TESTING.md](../../docs/guides/TESTING.md) - Overall testing strategy
 - [Integration Tests](../QuestionRandomizer.IntegrationTests.Controllers/) - Integration test documentation
 - [CLAUDE.md](../../CLAUDE.md) - Developer guide with architecture overview

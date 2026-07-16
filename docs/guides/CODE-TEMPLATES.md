@@ -1443,4 +1443,4 @@ These templates provide the foundation for the Question Randomizer Backend proje
 - ✅ **Self-Contained** (module includes all layers)
 - ✅ **Observable** (logging in event handlers)
 
-**For complete migration details, architecture comparison, and module statistics, see [MIGRATION-SUMMARY.md](../MIGRATION-SUMMARY.md).**
+**For complete migration details, architecture comparison, and module statistics, see [MIGRATION-SUMMARY.md](./MIGRATION-SUMMARY.md).**

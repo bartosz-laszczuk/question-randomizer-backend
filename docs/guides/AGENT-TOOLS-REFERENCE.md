@@ -693,7 +693,7 @@ protected override async Task<ToolResult> ExecuteInternalAsync(
 
 - **[AGENT-TOOL-DEVELOPMENT.md](./AGENT-TOOL-DEVELOPMENT.md)** - How to create new tools
 - **[AGENT-EXAMPLES.md](./AGENT-EXAMPLES.md)** - Real-world usage examples
-- **[Module CLAUDE.md](../src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md)** - Agent Module overview
+- **[Module CLAUDE.md](../../src/Modules/QuestionRandomizer.Modules.Agent/CLAUDE.md)** - Agent Module overview
 
 ---
 

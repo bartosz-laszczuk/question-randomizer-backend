@@ -334,7 +334,7 @@ await _userManagement.UpgradeToPremiumAsync(userId);
 ### For Developers
 
 1. **Read the documentation**
-   - [AUTHORIZATION.md](./docs/AUTHORIZATION.md) - Complete guide
+   - [AUTHORIZATION.md](./AUTHORIZATION.md) - Complete guide
 
 2. **Update existing handlers**
    - Inherit from `AuthorizedHandlerBase`
@@ -380,4 +380,4 @@ All 7 phases of the authorization system have been successfully implemented and 
 
 ---
 
-**For questions, refer to [AUTHORIZATION.md](./docs/AUTHORIZATION.md)**
+**For questions, refer to [AUTHORIZATION.md](./AUTHORIZATION.md)**

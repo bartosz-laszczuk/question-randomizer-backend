@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Question Randomizer — backend data contract (Firestore)",
+  "description": "Firestore collections owned by the backend (Firebase Admin SDK). This is the authoritative data model for the system; the frontend reads/writes a subset of these directly. Field names below are the STORED (wire) names that both services must agree on. Where the C# domain property name differs from the stored field, it is noted — that mapping needs verification (see architecture.md DRIFT note). Collection names: SharedKernel/Infrastructure/Firebase/FirestoreCollections.cs.",
+  "version": "baseline-2026-07-16",
+  "definitions": {
+    "User": {
+      "collection": "users",
+      "type": "object",
+      "description": "User profile / role record. Consulted for authorization (e.g. admin).",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" }
+      }
+    },
+    "Question": {
+      "collection": "questions",
+      "type": "object",
+      "description": "C# entity: Question. NOTE: C# property QuestionText maps to the stored question field the frontend uses — verify serialization.",
+      "required": ["question", "answer", "answerPl", "isActive", "userId"],
+      "properties": {
+        "id": { "type": "string" },
+        "question": { "type": "string", "description": "C# Question.QuestionText" },
+        "answer": { "type": "string" },
+        "answerPl": { "type": "string" },
+        "categoryId": { "type": ["string", "null"] },
+        "categoryName": { "type": ["string", "null"], "description": "Denormalized for quick access" },
+        "qualificationId": { "type": ["string", "null"] },
+        "qualificationName": { "type": ["string", "null"] },
+        "isActive": { "type": "boolean", "description": "Soft-delete flag; only active questions are randomization-eligible" },
+        "userId": { "type": "string" },
+        "tags": { "type": ["array", "null"], "items": { "type": "string" } },
+        "createdAt": { "type": ["string", "null"], "format": "date-time" },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "Category": {
+      "collection": "categories",
+      "type": "object",
+      "required": ["name", "userId"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "userId": { "type": "string" }
+      }
+    },
+    "Qualification": {
+      "collection": "qualifications",
+      "type": "object",
+      "required": ["name", "userId"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "userId": { "type": "string" }
+      }
+    },
+    "Conversation": {
+      "collection": "conversations",
+      "type": "object",
+      "description": "An AI-agent conversation. Hard-deleted (not soft).",
+      "required": ["userId"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": ["string", "null"] },
+        "userId": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": ["string", "null"], "format": "date-time" },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "Message": {
+      "collection": "messages",
+      "type": "object",
+      "required": ["conversationId", "role", "content"],
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "Randomization": {
+      "collection": "randomizations",
+      "type": "object",
+      "description": "One randomization session per user; status Ongoing or Completed.",
+      "required": ["userId", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "showAnswer": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Ongoing", "Completed"] },
+        "currentQuestionId": { "type": ["string", "null"] },
+        "selectedCategoryIds": { "type": ["array", "null"], "items": { "type": "string" } },
+        "usedQuestionIds": { "type": ["array", "null"], "items": { "type": "string" } },
+        "postponedQuestionIds": { "type": ["array", "null"], "items": { "type": "string" } },
+        "createdAt": { "type": ["string", "null"], "format": "date-time" },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "SelectedCategory": {
+      "collection": "selectedCategories",
+      "type": "object",
+      "description": "Categories scoping the current session (also tracked inline on Randomization.selectedCategoryIds).",
+      "properties": {
+        "id": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "userId": { "type": "string" }
+      }
+    },
+    "UsedQuestion": {
+      "collection": "usedQuestions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "questionId": { "type": "string" },
+        "categoryId": { "type": ["string", "null"] },
+        "userId": { "type": "string" }
+      }
+    },
+    "PostponedQuestion": {
+      "collection": "postponedQuestions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "questionId": { "type": "string" },
+        "categoryId": { "type": ["string", "null"] },
+        "userId": { "type": "string" }
+      }
+    }
+  },
+  "userIsolation": "Every user-owned collection carries userId. Repositories filter and verify ownership on every read/update/delete; a document belonging to another user is treated as not found. Firestore security rules (owned outside this repo) are the second layer."
+}
