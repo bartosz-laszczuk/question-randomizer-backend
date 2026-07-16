@@ -155,6 +155,7 @@ app.MapQualificationEndpoints();
 app.MapConversationEndpoints();
 app.MapRandomizationEndpoints();
 app.MapAgentEndpoints();
+app.MapAdminEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();
