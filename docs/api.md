@@ -7,14 +7,35 @@ Data shapes are in [`schema.json`](schema.json); the Controllers-vs-Minimal comp
 
 ## Canonical machine-readable spec
 
-The authoritative OpenAPI document is **generated at runtime by Swashbuckle** and served at
-`/swagger` (JSON at `/swagger/v1/swagger.json`) on each API. That generated file is the single
-source of truth the **frontend should generate its client from** (see the cross-repo contract
-strategy in the frontend's `docs/api.md`).
+The committed **[`openapi.json`](openapi.json)** (OpenAPI 3.0) is the versioned contract — the
+artifact the **frontend should generate its client from**. This markdown file is the
+human-readable companion.
 
-> ⚠️ **TODO.** There is no committed `openapi.yaml`. For the frontend to generate a client with a
-> CI freshness check, export the Swashbuckle output to a versioned artifact (committed
-> `openapi.yaml` or a published package). Until then this document is the human-readable contract.
+- **Regenerate:** `pwsh ./scripts/generate-openapi.ps1` (on Windows PowerShell:
+  `powershell -File scripts/generate-openapi.ps1`) — builds the Minimal API, boots it with Firebase
+  skipped, and captures `/swagger/v1/swagger.json`.
+- **Freshness gate:** `.github/workflows/openapi-freshness.yml` regenerates on CI and fails if the
+  committed `openapi.json` is stale — so the contract can't silently drift from the code.
+
+> Generation note: the Swashbuckle CLI (`dotnet swagger tofile`) does **not** work with this app's
+> minimal-hosting model, so the script boots the app and captures the runtime document instead.
+
+## Dual-API status
+
+Both APIs start and expose the **same 31 endpoints** (including `/api/admin/*`). Two bugs found
+while first generating this spec have been **fixed**:
+
+- **Controllers API (5000) now starts.** The Swashbuckle `6.8.1` ↔ `Microsoft.OpenApi 3.0.1`
+  conflict (which crashed `AddSwaggerGen()` on boot) was resolved by moving Controllers to
+  Swashbuckle `8.0.0` and dropping the explicit `Microsoft.OpenApi` pin.
+- **Minimal API (5001) now maps Admin.** `Program.cs` calls `MapAdminEndpoints()`, so `/api/admin/*`
+  is served on both APIs.
+
+Residual **cosmetic** difference (not a functional bug): the Controllers API's own Swagger reports
+PascalCase paths (`/api/Agent/execute`) because routes come from `[controller]` tokens, while the
+Minimal API and this committed spec use lowercase (`/api/agent/execute`). ASP.NET routing is
+case-insensitive and the frontend uses the lowercase form, so both APIs serve either casing. The
+committed `openapi.json` is generated from the Minimal API (lowercase, matching the frontend).
 
 ## Authentication
 

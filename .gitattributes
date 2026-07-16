@@ -1,0 +1,4 @@
+# The committed OpenAPI contract is generated (curl of the runtime Swagger doc).
+# Pin it to LF so the CI freshness check (scripts/generate-openapi.ps1) doesn't
+# fail spuriously on CRLF conversion.
+docs/openapi.json text eol=lf

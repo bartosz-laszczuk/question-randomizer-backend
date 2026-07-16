@@ -1,0 +1,36 @@
+name: OpenAPI freshness
+
+# Fails if docs/openapi.json is out of date relative to the code. Regenerates the
+# spec from the Minimal API and diffs it against the committed copy. If they differ,
+# run `pwsh ./scripts/generate-openapi.ps1` locally and commit the result.
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'docs/openapi.json'
+      - 'scripts/generate-openapi.ps1'
+  push:
+    branches: [master]
+
+jobs:
+  openapi-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Regenerate OpenAPI spec
+        run: pwsh ./scripts/generate-openapi.ps1
+
+      - name: Fail if docs/openapi.json is stale
+        run: |
+          if ! git diff --quiet -- docs/openapi.json; then
+            echo "::error::docs/openapi.json is out of date. Run 'pwsh ./scripts/generate-openapi.ps1' and commit."
+            git --no-pager diff -- docs/openapi.json
+            exit 1
+          fi
+          echo "docs/openapi.json is up to date."

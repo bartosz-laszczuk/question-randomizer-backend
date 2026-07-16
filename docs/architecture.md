@@ -57,9 +57,16 @@ Two presentation projects expose the **same** contract over the same modules:
 - **`QuestionRandomizer.Api.Controllers`** — traditional `[ApiController]` classes, port **5000**.
 - **`QuestionRandomizer.Api.MinimalApi`** — Minimal API endpoint groups, port **5001**.
 
-They are functionally identical; the split is a learning/comparison exercise showing the
-presentation layer is independent of the business architecture. Comparison details:
+They are *intended* to be functionally identical; the split is a learning/comparison exercise
+showing the presentation layer is independent of the business architecture. Comparison details:
 [`guides/dual-api-guide.md`](guides/dual-api-guide.md). **Any endpoint change must be applied to both.**
+
+Both APIs now start and expose the same 31 endpoints (verified via OpenAPI generation). Two bugs
+found while generating the spec were fixed: the Controllers API's Swashbuckle/`Microsoft.OpenApi`
+version conflict (moved to Swashbuckle `8.0.0`, dropped the explicit pin) and the Minimal API's
+missing `MapAdminEndpoints()`. One cosmetic difference remains — Controllers' Swagger reports
+PascalCase paths, Minimal uses lowercase; routing is case-insensitive so both serve either. The
+committed [`openapi.json`](openapi.json) is generated from the Minimal API. See [`api.md`](api.md).
 
 ## AI agent module
 

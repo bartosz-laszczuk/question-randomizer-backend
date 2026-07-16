@@ -53,6 +53,8 @@ Spec-first. The spec drives the code.
 
 - Legacy Clean-Architecture projects (`QuestionRandomizer.Application/Domain/Infrastructure`) still
   exist under `src/` despite the modular-monolith migration being described as complete.
+- Cosmetic dual-API difference: Controllers' Swagger reports PascalCase paths, Minimal uses
+  lowercase (routing is case-insensitive). Committed `openapi.json` uses the Minimal (lowercase) form.
 - Firestore field mapping: C# entity property names (e.g. `Question.QuestionText`) vs the stored
   field names the frontend uses (`question`) — verify the `ConvertTo<T>` mapping. See
   [`docs/architecture.md`](docs/architecture.md) and [`docs/schema.json`](docs/schema.json).
